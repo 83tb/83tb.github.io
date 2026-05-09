@@ -1,0 +1,4130 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Zegarowi Strażnicy Galaktyki</title>
+  <style>
+    :root {
+      --ink: #eef8ff;
+      --muted: #8db4cc;
+      --panel: rgba(8, 19, 37, 0.90);
+      --panel-strong: rgba(7, 17, 34, 0.96);
+      --cyan: #38e6df;
+      --lime: #67f6a3;
+      --gold: #f2a84b;
+      --pink: #df4c9f;
+      --violet: #5f73b7;
+      --danger: #f0675e;
+      --ok: #61e58f;
+      --shadow: 0 0 0 4px #07111f, 0 22px 0 rgba(0, 0, 0, 0.24), 0 34px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      color: var(--ink);
+      font-family: "Courier New", "Trebuchet MS", system-ui, monospace;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+        radial-gradient(circle at 15% 8%, rgba(56, 230, 223, 0.12), transparent 28%),
+        radial-gradient(circle at 78% 62%, rgba(223, 76, 159, 0.12), transparent 36%),
+        linear-gradient(145deg, #030611 0%, #081728 44%, #180b25 100%);
+      background-size: auto, 24px 24px, auto, auto, auto;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    #gameShell {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+    }
+
+    #gameCanvas {
+      width: min(100vw, calc(100vh * 16 / 9));
+      height: min(100vh, calc(100vw * 9 / 16));
+      display: block;
+      border-radius: 0;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      box-shadow: var(--shadow), inset 0 0 0 3px #1c3554, inset 0 0 0 6px #030611;
+      background: #050b18;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background:
+        linear-gradient(90deg, rgba(56,230,223,0.06) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(56,230,223,0.06) 1px, transparent 1px),
+        rgba(2, 7, 18, 0.86);
+      background-size: 18px 18px;
+      backdrop-filter: blur(4px);
+    }
+
+    .screen.hidden,
+    .hidden {
+      display: none !important;
+    }
+
+    .panel {
+      width: min(980px, 94vw);
+      max-height: min(92vh, 820px);
+      overflow: auto;
+      padding: clamp(20px, 3vw, 34px);
+      border: 3px solid #2f5872;
+      border-radius: 0;
+      background:
+        linear-gradient(90deg, rgba(56,230,223,0.07) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(56,230,223,0.07) 1px, transparent 1px),
+        linear-gradient(145deg, rgba(9, 22, 41, 0.96), rgba(12, 17, 43, 0.94));
+      background-size: 16px 16px, 16px 16px, auto;
+      box-shadow: var(--shadow);
+    }
+
+    .panel.narrow {
+      width: min(760px, 94vw);
+    }
+
+    .eyebrow {
+      color: var(--gold);
+      font-size: 0.94rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0 #1b1117;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      letter-spacing: 0;
+      line-height: 1.02;
+    }
+
+    h1 {
+      max-width: 760px;
+      font-size: clamp(2.25rem, 7vw, 5.8rem);
+      text-shadow: 3px 3px 0 #09101d, 6px 6px 0 #1f3350, 0 0 18px rgba(56, 230, 223, 0.26);
+    }
+
+    h2 {
+      font-size: clamp(1.7rem, 4vw, 3.2rem);
+    }
+
+    p {
+      color: var(--muted);
+      font-size: clamp(1rem, 2.2vw, 1.18rem);
+      line-height: 1.55;
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+      gap: clamp(18px, 4vw, 36px);
+      align-items: center;
+    }
+
+    .hero-art {
+      min-height: 320px;
+      position: relative;
+      border-radius: 0;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(56,230,223,0.11) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(56,230,223,0.08) 1px, transparent 1px),
+        radial-gradient(circle at 78% 24%, rgba(223, 76, 159, 0.26), transparent 32%),
+        linear-gradient(160deg, rgba(5, 13, 28, 0.96), rgba(15, 22, 46, 0.92));
+      background-size: 18px 18px, 18px 18px, auto, auto;
+      border: 3px solid #2f5872;
+      box-shadow: inset 0 0 0 3px #07111f, 8px 8px 0 rgba(0,0,0,0.32);
+    }
+
+    .hero-art::before {
+      content: "";
+      position: absolute;
+      width: 172px;
+      height: 172px;
+      left: 48%;
+      top: 46%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background:
+        linear-gradient(90deg, transparent 0 22%, rgba(255,255,255,0.12) 22% 26%, transparent 26% 100%),
+        radial-gradient(circle at 36% 30%, #fff4b2 0 0.48rem, transparent 0.54rem),
+        radial-gradient(circle at 50% 50%, #f2a84b 0 36%, #cf6758 37% 58%, #5269a8 59% 100%);
+      box-shadow: 0 0 0 4px #07111f, 0 0 0 8px #38e6df, 0 0 34px rgba(56, 230, 223, 0.34);
+    }
+
+    .hero-art::after {
+      content: "";
+      position: absolute;
+      width: 250px;
+      height: 54px;
+      left: 48%;
+      top: 46%;
+      transform: translate(-50%, -50%) rotate(-12deg);
+      border: 5px solid rgba(56, 230, 223, 0.62);
+      border-left-color: transparent;
+      border-right-color: transparent;
+      border-radius: 50%;
+      filter: drop-shadow(0 0 8px rgba(56, 230, 223, 0.65));
+    }
+
+    .tiny-ship,
+    .tiny-robot,
+    .tiny-sword,
+    .tiny-astronaut,
+    .tiny-astronaut span {
+      position: absolute;
+    }
+
+    .tiny-ship,
+    .tiny-robot,
+    .tiny-sword,
+    .tiny-astronaut {
+      filter: drop-shadow(0 0 12px rgba(83, 225, 255, 0.48));
+    }
+
+    .tiny-ship {
+      width: 108px;
+      height: 54px;
+      left: 10%;
+      top: 18%;
+      z-index: 1;
+      border-radius: 0;
+      background: linear-gradient(90deg, #6b7f99, #38e6df 55%, #24364e);
+      clip-path: polygon(0 55%, 58% 10%, 100% 50%, 58% 90%);
+      box-shadow: inset -8px -8px 0 rgba(0,0,0,0.28);
+    }
+
+    .tiny-robot {
+      right: 13%;
+      bottom: 15%;
+      z-index: 2;
+      width: 74px;
+      height: 86px;
+      border-radius: 0;
+      background: linear-gradient(180deg, #b7d1d9, #38e6df);
+      box-shadow: 0 0 0 4px #07111f, inset -8px -10px 0 rgba(30, 77, 150, 0.38);
+    }
+
+    .tiny-robot::before,
+    .tiny-robot::after {
+      content: "";
+      position: absolute;
+      top: 24px;
+      width: 12px;
+      height: 12px;
+      border-radius: 0;
+      background: #142650;
+    }
+
+    .tiny-robot::before {
+      left: 20px;
+    }
+
+    .tiny-robot::after {
+      right: 20px;
+    }
+
+    .tiny-sword {
+      width: 12px;
+      height: 136px;
+      right: 28%;
+      top: 12%;
+      border-radius: 0;
+      background: linear-gradient(180deg, transparent 0 12%, #82fff0 13% 82%, #45536f 83% 100%);
+      box-shadow: 0 0 12px #38e6df, 0 0 28px rgba(56, 230, 223, 0.65);
+      transform: rotate(35deg);
+      z-index: 1;
+    }
+
+    .tiny-astronaut {
+      left: 10%;
+      bottom: 10%;
+      width: 176px;
+      height: 226px;
+      filter: drop-shadow(10px 10px 0 rgba(0,0,0,0.34));
+      z-index: 3;
+    }
+
+    .tiny-astronaut .pack {
+      left: 16px;
+      top: 88px;
+      width: 36px;
+      height: 82px;
+      background: #314866;
+      box-shadow: 0 0 0 5px #07111f, inset -8px -8px 0 #15243b;
+    }
+
+    .tiny-astronaut .torso {
+      left: 50px;
+      top: 86px;
+      width: 78px;
+      height: 100px;
+      background: #1b2a45;
+      box-shadow: 0 0 0 6px #07111f, inset 0 12px 0 #7f9cb2, inset 0 -14px 0 #0d1b32;
+    }
+
+    .tiny-astronaut .chest {
+      left: 66px;
+      top: 108px;
+      width: 46px;
+      height: 38px;
+      background:
+        linear-gradient(90deg, #38e6df 0 34%, transparent 34% 44%, #f2a84b 44% 62%, transparent 62% 72%, #61e58f 72%);
+      box-shadow: 0 0 0 5px #07111f;
+    }
+
+    .tiny-astronaut .strap-a,
+    .tiny-astronaut .strap-b {
+      top: 96px;
+      width: 14px;
+      height: 96px;
+      background: #c07a45;
+      box-shadow: 0 0 0 4px #07111f;
+    }
+
+    .tiny-astronaut .strap-a {
+      left: 52px;
+      transform: skewX(-14deg);
+    }
+
+    .tiny-astronaut .strap-b {
+      right: 48px;
+      transform: skewX(14deg);
+    }
+
+    .tiny-astronaut .neck {
+      left: 62px;
+      top: 66px;
+      width: 54px;
+      height: 30px;
+      background: #c07a45;
+      box-shadow: 0 0 0 6px #07111f;
+    }
+
+    .tiny-astronaut .head {
+      left: 54px;
+      top: 30px;
+      width: 66px;
+      height: 58px;
+      background: #f1b188;
+      box-shadow: 0 0 0 6px #07111f, inset -8px -7px 0 #c78367;
+    }
+
+    .tiny-astronaut .hair {
+      left: 48px;
+      top: 16px;
+      width: 76px;
+      height: 30px;
+      background: #6b3b2d;
+      box-shadow: 0 0 0 5px #07111f, inset 18px 0 0 #8d5137, inset 42px 0 0 #4b2b24;
+    }
+
+    .tiny-astronaut .eye-a,
+    .tiny-astronaut .eye-b {
+      top: 54px;
+      width: 7px;
+      height: 7px;
+      background: #07111f;
+    }
+
+    .tiny-astronaut .eye-a {
+      left: 72px;
+    }
+
+    .tiny-astronaut .eye-b {
+      left: 98px;
+    }
+
+    .tiny-astronaut .helmet {
+      left: 0;
+      bottom: 2px;
+      width: 70px;
+      height: 58px;
+      background: #d2e2e8;
+      box-shadow: 0 0 0 6px #07111f, inset 10px 12px 0 #38e6df, inset -10px -12px 0 #315071;
+    }
+
+    .tiny-astronaut .arm-a,
+    .tiny-astronaut .arm-b {
+      top: 98px;
+      width: 24px;
+      height: 82px;
+      background: #223654;
+      box-shadow: 0 0 0 5px #07111f, inset 0 18px 0 #c07a45;
+    }
+
+    .tiny-astronaut .arm-a {
+      left: 26px;
+      transform: rotate(13deg);
+    }
+
+    .tiny-astronaut .arm-b {
+      right: 18px;
+      transform: rotate(-18deg);
+    }
+
+    .tiny-astronaut .leg-a,
+    .tiny-astronaut .leg-b {
+      top: 184px;
+      width: 30px;
+      height: 40px;
+      background: #223654;
+      box-shadow: 0 0 0 5px #07111f, inset 0 25px 0 #c07a45;
+    }
+
+    .tiny-astronaut .leg-a {
+      left: 58px;
+    }
+
+    .tiny-astronaut .leg-b {
+      left: 98px;
+    }
+
+    .actions,
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 22px;
+    }
+
+    .btn {
+      min-height: 48px;
+      padding: 13px 18px;
+      border: 3px solid #07111f;
+      border-radius: 0;
+      color: #07111f;
+      font-weight: 900;
+      cursor: pointer;
+      background: linear-gradient(180deg, #ffd779, #f2a84b 58%, #8e5438);
+      box-shadow: 5px 5px 0 #07111f, inset 0 3px 0 rgba(255, 255, 255, 0.46);
+      transition: transform 0.16s ease, filter 0.16s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.06);
+    }
+
+    .btn:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .btn.secondary {
+      color: var(--ink);
+      background: #17243d;
+      box-shadow: 5px 5px 0 #07111f, inset 0 0 0 2px #2f5872;
+    }
+
+    .btn.green {
+      background: linear-gradient(180deg, #9efcb4, #61e58f 58%, #288f6e);
+      box-shadow: 5px 5px 0 #07111f, inset 0 3px 0 rgba(255, 255, 255, 0.46);
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    .level-card {
+      min-height: 158px;
+      padding: 18px;
+      border: 3px solid #2f5872;
+      border-radius: 0;
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+      background:
+        linear-gradient(90deg, rgba(56,230,223,0.06) 1px, transparent 1px),
+        linear-gradient(145deg, rgba(12, 29, 52, 0.96), rgba(18, 25, 55, 0.92));
+      background-size: 14px 14px, auto;
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.38);
+    }
+
+    .level-card strong {
+      display: block;
+      font-size: 1.2rem;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .level-card span {
+      display: block;
+      color: var(--muted);
+      line-height: 1.38;
+    }
+
+    .tutorial-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .tip {
+      padding: 14px 16px;
+      border-radius: 0;
+      background: #0d1b32;
+      border: 2px solid #2f5872;
+      color: #c9e3ef;
+      line-height: 1.45;
+    }
+
+    #hud {
+      position: absolute;
+      z-index: 8;
+      top: max(12px, env(safe-area-inset-top));
+      right: max(12px, env(safe-area-inset-right));
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      justify-content: flex-end;
+      max-width: min(720px, 58vw);
+      pointer-events: none;
+    }
+
+    .hud-pill {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 0;
+      background: #081322;
+      border: 2px solid #2f5872;
+      color: #eaf3ff;
+      font-weight: 800;
+      box-shadow: 4px 4px 0 #030611;
+    }
+
+    #menuButton,
+    #musicButton {
+      pointer-events: auto;
+      min-height: 38px;
+      border-radius: 0;
+      padding: 8px 13px;
+      border: 2px solid #07111f;
+      color: #07111f;
+      font-weight: 900;
+      background: linear-gradient(180deg, #a8ffff, #38e6df 62%, #237b8d);
+      cursor: pointer;
+    }
+
+    #musicButton.off {
+      color: #c9e3ef;
+      background: linear-gradient(180deg, #25394d, #10203a 62%, #07111f);
+      border-color: #2f5872;
+    }
+
+    #feedback {
+      position: absolute;
+      z-index: 11;
+      left: 50%;
+      top: max(18px, env(safe-area-inset-top));
+      width: min(560px, 90vw);
+      transform: translate(-50%, -140%);
+      padding: 14px 18px;
+      border-radius: 0;
+      background: var(--panel-strong);
+      border: 3px solid #2f5872;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transition: transform 0.24s ease, opacity 0.24s ease;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    #feedback.visible {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    #feedback strong {
+      display: block;
+      font-size: 1.08rem;
+      margin-bottom: 4px;
+    }
+
+    #feedback.ok strong {
+      color: var(--ok);
+    }
+
+    #feedback.try strong {
+      color: var(--gold);
+    }
+
+    #feedback small {
+      display: block;
+      color: #dbe8ff;
+      font-size: 0.96rem;
+      line-height: 1.35;
+    }
+
+    .terminal-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(2, 7, 18, 0.54);
+      backdrop-filter: blur(2px);
+    }
+
+    .terminal-card {
+      width: min(760px, 94vw);
+      padding: 22px;
+      border: 3px solid #38e6df;
+      border-radius: 0;
+      background:
+        linear-gradient(90deg, rgba(56,230,223,0.10) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(56,230,223,0.08) 1px, transparent 1px),
+        #07111f;
+      background-size: 16px 16px;
+      box-shadow: var(--shadow), inset 0 0 0 3px #10203a;
+    }
+
+    .terminal-card h2 {
+      margin-top: 6px;
+      font-size: clamp(1.55rem, 4vw, 2.45rem);
+    }
+
+    .terminal-card p {
+      margin: 12px 0;
+      font-size: 1rem;
+    }
+
+    .terminal-content {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    #terminalClock {
+      width: 220px;
+      height: 220px;
+      display: block;
+      border: 3px solid #2f5872;
+      background: #07111f;
+      image-rendering: pixelated;
+      box-shadow: inset 0 0 0 4px #030914, 0 0 22px rgba(56, 230, 223, 0.22);
+    }
+
+    .terminal-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    #terminalInput {
+      width: 100%;
+      min-height: 54px;
+      padding: 10px 14px;
+      border: 3px solid #2f5872;
+      border-radius: 0;
+      color: #eef8ff;
+      font: 900 1.35rem "Courier New", monospace;
+      background: #030914;
+      outline: none;
+      box-shadow: inset 0 0 0 3px #07111f;
+    }
+
+    #terminalInput:focus {
+      border-color: #61e58f;
+      box-shadow: 0 0 0 3px rgba(97, 229, 143, 0.24), inset 0 0 0 3px #07111f;
+    }
+
+    #terminalMessage {
+      min-height: 24px;
+      color: #bdf6c9;
+      font-weight: 800;
+    }
+
+    @media (max-width: 560px) {
+      .terminal-content,
+      .terminal-row {
+        grid-template-columns: 1fr;
+      }
+
+      #terminalClock {
+        width: min(220px, 70vw);
+        height: min(220px, 70vw);
+        margin: 0 auto;
+      }
+    }
+
+    #robotSpeech {
+      position: absolute;
+      z-index: 9;
+      left: max(14px, env(safe-area-inset-left));
+      bottom: max(16px, calc(env(safe-area-inset-bottom) + 12px));
+      width: min(520px, calc(100vw - 28px));
+      padding: 13px 16px 13px 58px;
+      border-radius: 0;
+      background: rgba(7, 17, 34, 0.94);
+      border: 3px solid #2f5872;
+      color: #eaf3ff;
+      font-weight: 800;
+      box-shadow: 5px 5px 0 #030611;
+      pointer-events: none;
+    }
+
+    #robotSpeech::before {
+      content: "";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      width: 30px;
+      height: 30px;
+      transform: translateY(-50%);
+      border-radius: 0;
+      background:
+        linear-gradient(90deg, transparent 0 22%, #081322 22% 32%, transparent 32% 64%, #081322 64% 74%, transparent 74%),
+        linear-gradient(180deg, #c5f7ff, #38e6df);
+      box-shadow: 0 0 0 3px #07111f;
+    }
+
+    #touchControls {
+      position: absolute;
+      z-index: 10;
+      inset: auto 0 max(14px, env(safe-area-inset-bottom)) 0;
+      display: none;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 max(18px, env(safe-area-inset-right)) 0 max(18px, env(safe-area-inset-left));
+      pointer-events: none;
+    }
+
+    .touch-cluster {
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+    }
+
+    .touch-btn {
+      width: clamp(58px, 12vw, 78px);
+      height: clamp(58px, 12vw, 78px);
+      border-radius: 0;
+      border: 3px solid #07111f;
+      color: #fff;
+      font-size: 1.55rem;
+      font-weight: 900;
+      background: #10203a;
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.44), inset 0 0 0 2px #2f5872;
+    }
+
+    .touch-btn.jump {
+      background: #f2a84b;
+      color: #07111f;
+    }
+
+    .touch-btn.action {
+      width: clamp(92px, 18vw, 124px);
+      background: #61e58f;
+      color: #07111f;
+      font-size: 0.92rem;
+    }
+
+    @media (pointer: coarse), (max-width: 820px) {
+      #touchControls.playing {
+        display: flex;
+      }
+
+      #hud {
+        left: 10px;
+        right: 10px;
+        max-width: none;
+        justify-content: center;
+      }
+
+      #robotSpeech {
+        bottom: 102px;
+        font-size: 0.92rem;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .hero-layout,
+      .level-grid,
+      .tutorial-list {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-art {
+        min-height: 210px;
+      }
+
+      .tiny-astronaut {
+        transform: scale(0.72);
+        transform-origin: left bottom;
+      }
+
+      .panel {
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="gameShell" aria-label="Gra edukacyjna o zegarze analogowym">
+    <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+    <div id="hud" class="hidden">
+      <div class="hud-pill" id="hudPlanet">Planeta 1</div>
+      <div class="hud-pill" id="hudStage">Etap 1/4</div>
+      <button id="musicButton" type="button" aria-pressed="true">Muzyka: wł.</button>
+      <button id="menuButton" type="button">Menu</button>
+    </div>
+
+    <div id="feedback" role="status" aria-live="polite"></div>
+    <div id="robotSpeech" class="hidden" aria-live="polite"></div>
+
+    <div id="terminalOverlay" class="terminal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="terminalTitle">
+      <form id="terminalForm" class="terminal-card">
+        <div class="eyebrow">Komputer bramy</div>
+        <h2 id="terminalTitle">Wpisz godzinę</h2>
+        <div class="terminal-content">
+          <canvas id="terminalClock" width="240" height="240" aria-label="Zegar do odczytania"></canvas>
+          <div>
+            <p>Odczytaj tarczę zegara i wpisz czas cyframi. Przykład: <strong>7:05</strong> albo <strong>7.05</strong>.</p>
+            <div class="terminal-row">
+              <input id="terminalInput" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="na przykład: 4.25" aria-label="Wpisz godzinę z zegara">
+              <button class="btn green" type="submit">Podłącz</button>
+            </div>
+        <p id="terminalMessage" aria-live="polite">Wpisz godzinę i naciśnij Podłącz.</p>
+          </div>
+        </div>
+        <div class="row-actions">
+          <button class="btn secondary" type="button" id="terminalClose">Wróć do etapu</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="touchControls" aria-label="Sterowanie dotykowe">
+      <div class="touch-cluster">
+        <button class="touch-btn" type="button" data-touch="left" aria-label="W lewo">‹</button>
+        <button class="touch-btn" type="button" data-touch="right" aria-label="W prawo">›</button>
+      </div>
+      <div class="touch-cluster">
+        <button class="touch-btn jump" type="button" data-touch="jump" aria-label="Skok">↑</button>
+        <button class="touch-btn action" type="button" data-touch="action" aria-label="Użyj dźwigni albo komputera spacją">SPACJA</button>
+      </div>
+    </div>
+
+    <section id="screen" class="screen"></section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      const screen = document.getElementById("screen");
+      const hud = document.getElementById("hud");
+      const musicButton = document.getElementById("musicButton");
+      const touchControls = document.getElementById("touchControls");
+      const feedback = document.getElementById("feedback");
+      const robotSpeech = document.getElementById("robotSpeech");
+      const terminalOverlay = document.getElementById("terminalOverlay");
+      const terminalForm = document.getElementById("terminalForm");
+      const terminalInput = document.getElementById("terminalInput");
+      const terminalMessage = document.getElementById("terminalMessage");
+      const terminalClose = document.getElementById("terminalClose");
+      const terminalClock = document.getElementById("terminalClock");
+      const terminalClockCtx = terminalClock.getContext("2d");
+
+      const W = canvas.width;
+      const H = canvas.height;
+      const TAU = Math.PI * 2;
+
+      const keys = {
+        left: false,
+        right: false,
+        jump: false,
+        action: false,
+        down: false
+      };
+
+      let jumpQueued = false;
+      let actionQueued = false;
+      let lastTime = 0;
+      let audioCtx = null;
+      let feedbackTimer = 0;
+      let robotTimer = 0;
+
+      const player = {
+        x: 92,
+        y: 480,
+        w: 52,
+        h: 76,
+        vx: 0,
+        vy: 0,
+        onGround: false,
+        onLadder: false,
+        facing: 1,
+        answerCooldown: 0,
+        actionCooldown: 0,
+        dead: false,
+        coyote: 0
+      };
+
+      const state = {
+        playing: false,
+        mode: "adventure",
+        pendingStart: null,
+        levelIndex: 0,
+        stageIndex: 0,
+        currentQuestion: null,
+        stageTask: null,
+        answerMode: "lever",
+        answerLevers: [],
+        terminal: null,
+        crate: null,
+        layout: null,
+        activeLever: null,
+        activeTerminal: false,
+        terminalOpen: false,
+        worldWidth: 3260,
+        cameraX: 0,
+        gateOpen: false,
+        stageSolved: false,
+        resetTimer: 0,
+        musicEnabled: true,
+        stageTime: 0,
+        hintShown: false,
+        boss: null,
+        particles: [],
+        stars: []
+      };
+
+      const music = {
+        master: null,
+        timer: null,
+        track: "moonlight",
+        profileKey: "",
+        nextTime: 0,
+        step: 0,
+        beatSeconds: 60 / 144,
+        stepsPerBeat: 4,
+        totalSteps: 512
+      };
+
+      const heroicBars = [
+        { bass: 36, chord: [48, 55, 60, 63, 67], dyn: 0.78 },
+        { bass: 31, chord: [43, 50, 55, 59, 62, 65], dyn: 0.82 },
+        { bass: 39, chord: [51, 55, 60, 63, 67], dyn: 0.72 },
+        { bass: 31, chord: [43, 50, 55, 59, 62, 67], dyn: 0.94 },
+        { bass: 32, chord: [44, 51, 56, 60, 63], dyn: 1.08 },
+        { bass: 41, chord: [41, 48, 53, 56, 60], dyn: 0.55 },
+        { bass: 38, chord: [50, 56, 62, 65, 68], dyn: 0.68 },
+        { bass: 31, chord: [43, 50, 55, 59, 62, 67], dyn: 1.16 },
+        { bass: 39, chord: [51, 55, 58, 63, 67], dyn: 0.52 },
+        { bass: 34, chord: [46, 53, 58, 62, 65], dyn: 0.50 },
+        { bass: 36, chord: [48, 55, 60, 63, 67], dyn: 0.60 },
+        { bass: 43, chord: [43, 50, 55, 58, 62], dyn: 0.46 },
+        { bass: 32, chord: [44, 51, 56, 60, 63], dyn: 0.72 },
+        { bass: 41, chord: [41, 48, 53, 56, 60], dyn: 0.62 },
+        { bass: 38, chord: [50, 56, 62, 65, 68], dyn: 0.86 },
+        { bass: 31, chord: [43, 50, 55, 59, 62, 67], dyn: 1.18 },
+        { bass: 36, chord: [48, 54, 57, 63, 66], dyn: 0.72 },
+        { bass: 41, chord: [41, 48, 53, 56, 65], dyn: 0.82 },
+        { bass: 34, chord: [46, 53, 58, 62, 67], dyn: 0.88 },
+        { bass: 39, chord: [51, 55, 58, 63, 70], dyn: 0.62 },
+        { bass: 32, chord: [44, 51, 56, 59, 63], dyn: 1.06 },
+        { bass: 39, chord: [51, 55, 60, 63, 67], dyn: 0.42 },
+        { bass: 38, chord: [50, 56, 62, 65, 68], dyn: 0.94 },
+        { bass: 31, chord: [43, 50, 55, 59, 62, 67], dyn: 1.28 },
+        { bass: 36, chord: [48, 55, 60, 63, 67], dyn: 0.90 },
+        { bass: 31, chord: [43, 50, 55, 59, 62, 65], dyn: 0.96 },
+        { bass: 36, chord: [48, 55, 60, 63, 67], dyn: 0.78 },
+        { bass: 41, chord: [41, 48, 53, 56, 60], dyn: 0.74 },
+        { bass: 38, chord: [50, 56, 62, 65, 68], dyn: 1.12 },
+        { bass: 31, chord: [43, 50, 55, 59, 62, 67], dyn: 1.24 },
+        { bass: 36, chord: [48, 55, 60, 63, 67, 72], dyn: 1.34 },
+        { bass: 31, chord: [43, 50, 55, 59, 62, 67, 72], dyn: 1.42 }
+      ];
+
+      const moonlightBars = [
+        { bass: 37, chord: [49, 56, 61, 64, 68], melody: 73 },
+        { bass: 44, chord: [44, 51, 56, 59, 63, 68], melody: 71 },
+        { bass: 45, chord: [45, 52, 57, 61, 64, 69], melody: 76 },
+        { bass: 40, chord: [40, 52, 56, 59, 64, 68], melody: 75 },
+        { bass: 42, chord: [42, 49, 54, 57, 61, 66], melody: 73 },
+        { bass: 44, chord: [44, 49, 56, 61, 64, 68], melody: 71 },
+        { bass: 39, chord: [39, 51, 54, 57, 63, 66], melody: 70 },
+        { bass: 44, chord: [44, 51, 56, 59, 63, 68], melody: 68 }
+      ];
+
+      const levelMusicProfiles = [
+        {
+          tempo: 144,
+          transpose: 0,
+          barOffset: 0,
+          stringGain: 1,
+          bassGain: 1,
+          brassGain: 1,
+          accentGain: 1,
+          fluteGain: 0.8,
+          sparkle: 0.25,
+          arpeggioOctave: 0,
+          bassOctave: 0,
+          density: 1,
+          motif: [0, 2, 4, 6],
+          accentBars: [0, 8, 15, 23, 28, 30, 31]
+        },
+        {
+          tempo: 156,
+          transpose: 7,
+          barOffset: 8,
+          stringGain: 0.92,
+          bassGain: 0.72,
+          brassGain: 0.62,
+          accentGain: 0.74,
+          fluteGain: 1.35,
+          sparkle: 1.2,
+          arpeggioOctave: 12,
+          bassOctave: 0,
+          density: 1.34,
+          motif: [0, 3, 6, 10],
+          accentBars: [1, 5, 9, 13, 21, 25, 29]
+        },
+        {
+          tempo: 150,
+          transpose: 4,
+          barOffset: 16,
+          stringGain: 1.08,
+          bassGain: 0.96,
+          brassGain: 1.24,
+          accentGain: 1.12,
+          fluteGain: 1.05,
+          sparkle: 0.72,
+          arpeggioOctave: 0,
+          bassOctave: 0,
+          density: 1.16,
+          motif: [0, 1, 4, 8],
+          accentBars: [0, 4, 12, 16, 20, 24, 31]
+        },
+        {
+          tempo: 132,
+          transpose: -5,
+          barOffset: 24,
+          stringGain: 0.86,
+          bassGain: 1.34,
+          brassGain: 0.96,
+          accentGain: 1.18,
+          fluteGain: 0.58,
+          sparkle: 0.35,
+          arpeggioOctave: -5,
+          bassOctave: -5,
+          density: 0.86,
+          motif: [0, 4, 8, 12],
+          accentBars: [0, 7, 15, 16, 23, 30, 31]
+        }
+      ];
+
+      const stageMusicVariants = [
+        { tempoAdd: 0, transposeAdd: 0, barShift: 0, density: 1, accent: 1, color: 0 },
+        { tempoAdd: 6, transposeAdd: 3, barShift: 3, density: 1.12, accent: 0.92, color: 1 },
+        { tempoAdd: -4, transposeAdd: -2, barShift: 6, density: 0.92, accent: 1.18, color: 2 },
+        { tempoAdd: 8, transposeAdd: 0, barShift: 11, density: 1.25, accent: 1.28, color: 3 }
+      ];
+
+      const motivational = [
+        "Świetnie!",
+        "Masz kosmiczny refleks!",
+        "Zegarowy mistrz!",
+        "Piękny skok przez czas!",
+        "Wspaniale odczytany zegar!"
+      ];
+
+      const robotLines = {
+        start: "Jestem R-0BI. Skacz po platformach, przepchnij skrzynię pod pulpit i pociągnij dobrą dźwignię.",
+        full: "Krótka wskazówka mówi godzinę. Długa na 12 oznacza równo.",
+        quarter: "Długa wskazówka pokazuje minuty: 3 to kwadrans, 6 to trzydzieści, 9 to za kwadrans.",
+        five: "Każdy numer na tarczy to kolejne 5 minut. Policz: 1 to 5, 2 to 10, 3 to 15.",
+        hard: "Przy trudnych minutach patrz na małe kreski między cyframi. Każda mała kreska to jedna minuta."
+      };
+
+      const levels = [
+        {
+          name: "Planeta Równych Godzin",
+          shortName: "Pełne godziny",
+          planet: "Aurelia",
+          theme: ["#3aa6ad", "#c48658", "#9d4b57"],
+          guide: robotLines.full,
+          stageCount: 15,
+          tasks: [
+            q(1, 0, "pierwsza", ["pierwsza", "trzecia", "dziewiąta"], "Długa wskazówka jest na 12, więc jest równo. Krótka wskazuje 1."),
+            q(7, 0, "siódma", ["druga", "siódma", "jedenasta"], "Długa wskazówka jest na 12, więc patrzymy na krótką. Ona wskazuje 7."),
+            q(12, 0, "dwunasta", ["czwarta", "dwunasta", "ósma"], "Obie wskazówki są przy 12, więc to dwunasta równo."),
+            q(5, 0, "piąta", ["piąta", "szósta", "dziewiąta"], "Długa wskazówka stoi na 12, a krótka na 5. To piąta.")
+          ]
+        },
+        {
+          name: "Księżyc Kwadransów",
+          shortName: "Połówki i kwadranse",
+          planet: "Lumina",
+          theme: ["#78a88b", "#4c9ba5", "#6d668a"],
+          guide: robotLines.quarter,
+          stageCount: 15,
+          tasks: [
+            q(3, 15, "kwadrans po trzeciej (3:15)", ["kwadrans po trzeciej (3:15)", "wpół do trzeciej (2:30)", "za kwadrans czwarta (3:45)"], "Długa wskazówka jest na 3, więc to 15 minut: kwadrans po trzeciej."),
+            q(6, 30, "wpół do siódmej (6:30)", ["wpół do siódmej (6:30)", "kwadrans po szóstej (6:15)", "za kwadrans szósta (5:45)"], "Długa wskazówka jest na 6, więc to 30 minut. Mówimy: wpół do siódmej."),
+            q(8, 45, "za kwadrans dziewiąta (8:45)", ["kwadrans po ósmej (8:15)", "za kwadrans dziewiąta (8:45)", "wpół do dziewiątej (8:30)"], "Długa wskazówka jest na 9, więc zostało 15 minut do następnej godziny."),
+            q(12, 15, "kwadrans po dwunastej (12:15)", ["kwadrans po dwunastej (12:15)", "wpół do pierwszej (12:30)", "za kwadrans dwunasta (11:45)"], "Długa wskazówka jest na 3, czyli 15 minut po dwunastej.")
+          ]
+        },
+        {
+          name: "Pas Pięciominutowych Meteorów",
+          shortName: "Co 5 minut",
+          planet: "Orionek",
+          theme: ["#a8546a", "#c98b4d", "#3f9aa2"],
+          guide: robotLines.five,
+          stageCount: 15,
+          tasks: [
+            q(4, 5, "4:05", ["4:05", "4:25", "5:04"], "Długa wskazówka jest na 1. Jeden krok po 5 minut daje 5 minut, czyli 4:05."),
+            q(9, 10, "9:10", ["9:10", "10:09", "9:50"], "Długa wskazówka jest na 2. Dwa razy 5 minut to 10 minut."),
+            q(2, 25, "2:25", ["2:20", "2:25", "3:25"], "Długa wskazówka jest na 5. Pięć razy 5 minut to 25 minut."),
+            q(11, 55, "11:55", ["11:55", "12:55", "11:05"], "Długa wskazówka jest na 11. Jedenaście razy 5 minut to 55 minut.")
+          ]
+        },
+        {
+          name: "Mgławica Dokładnych Minut",
+          shortName: "Trudne minuty",
+          planet: "Minutia",
+          theme: ["#4d9ba5", "#b95452", "#c48a50"],
+          guide: robotLines.hard,
+          stageCount: 15,
+          tasks: [
+            q(7, 13, "7:13", ["7:13", "7:15", "8:13"], "Policz małe kreski. Długa wskazówka jest na 13. minucie, więc to 7:13."),
+            q(10, 47, "10:47", ["10:47", "10:45", "11:47"], "Długa wskazówka minęła 9 i stoi na 47. małej kresce. To 10:47."),
+            q(1, 29, "1:29", ["1:29", "1:30", "2:29"], "Długa wskazówka jest jedną kreskę przed 30 minutami. To 1:29."),
+            {
+              boss: true,
+              questions: [
+                q(2, 38, "2:38", ["2:38", "2:35", "3:38"], "Długa wskazówka jest na 38. minucie. Krótka jest po 2, więc to 2:38."),
+                q(11, 56, "11:56", ["11:56", "12:56", "11:55"], "Długa wskazówka jest blisko 12, na 56. minucie. To 11:56."),
+                q(4, 22, "4:22", ["4:22", "4:20", "5:22"], "Długa wskazówka jest dwie kreski po 20 minutach. To 4:22.")
+              ]
+            }
+          ]
+        }
+      ];
+
+      function q(hour, minute, correct, answers, explanation) {
+        return {
+          hour,
+          minute,
+          correct,
+          answers,
+          explanation,
+          digital: formatTime(hour, minute)
+        };
+      }
+
+      function levelStageCount(levelOrIndex) {
+        const level = typeof levelOrIndex === "number" ? levels[levelOrIndex] : levelOrIndex;
+        return level?.stageCount || level?.tasks?.length || 1;
+      }
+
+      function isTerminalStage(levelIndex = state.levelIndex, stageIndex = state.stageIndex) {
+        const total = levelStageCount(levelIndex);
+        return stageIndex >= Math.max(0, total - 5);
+      }
+
+      function minuteLabelsForStage(levelIndex = state.levelIndex, stageIndex = state.stageIndex) {
+        if (stageIndex >= 5) {
+          return [];
+        }
+        if (levelIndex === 1) {
+          return [15, 30, 45];
+        }
+        if (levelIndex === 2 || levelIndex === 3) {
+          return [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+        }
+        return [];
+      }
+
+      const hourNames = ["", "pierwsza", "druga", "trzecia", "czwarta", "piąta", "szósta", "siódma", "ósma", "dziewiąta", "dziesiąta", "jedenasta", "dwunasta"];
+      const hourCaseNames = ["", "pierwszej", "drugiej", "trzeciej", "czwartej", "piątej", "szóstej", "siódmej", "ósmej", "dziewiątej", "dziesiątej", "jedenastej", "dwunastej"];
+
+      function normalizeHour(hour) {
+        return ((hour - 1 + 12) % 12) + 1;
+      }
+
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function buildAnswers(correct, makeWrong) {
+        const answers = [correct];
+        let guard = 0;
+        while (answers.length < 3 && guard < 80) {
+          const candidate = makeWrong();
+          if (!answers.includes(candidate)) {
+            answers.push(candidate);
+          }
+          guard += 1;
+        }
+        return answers;
+      }
+
+      function quarterAnswerLabel(hour, minute) {
+        const nextHour = normalizeHour(hour + 1);
+        if (minute === 15) {
+          return `kwadrans po ${hourCaseNames[hour]} (${formatTime(hour, minute)})`;
+        }
+        if (minute === 30) {
+          return `wpół do ${hourCaseNames[nextHour]} (${formatTime(hour, minute)})`;
+        }
+        return `za kwadrans ${hourNames[nextHour]} (${formatTime(hour, minute)})`;
+      }
+
+      function randomQuestionForLevel(levelIndex) {
+        if (levelIndex === 0) {
+          const hour = randomInt(1, 12);
+          const correct = hourNames[hour];
+          return q(
+            hour,
+            0,
+            correct,
+            buildAnswers(correct, () => hourNames[randomInt(1, 12)]),
+            `Długa wskazówka jest na 12, więc jest równo. Krótka wskazuje ${hour}.`
+          );
+        }
+
+        if (levelIndex === 1) {
+          const hour = randomInt(1, 12);
+          const minute = [15, 30, 45][randomInt(0, 2)];
+          const nextHour = normalizeHour(hour + 1);
+          const correct = quarterAnswerLabel(hour, minute);
+          const explanation = minute === 15
+            ? `Długa wskazówka jest na 3, więc to 15 minut: kwadrans po ${hourCaseNames[hour]}.`
+            : minute === 30
+              ? `Długa wskazówka jest na 6, więc to 30 minut. Mówimy: wpół do ${hourCaseNames[nextHour]}.`
+              : `Długa wskazówka jest na 9, więc zostało 15 minut do następnej godziny: ${hourNames[nextHour]}.`;
+          return q(
+            hour,
+            minute,
+            correct,
+            buildAnswers(correct, () => quarterAnswerLabel(randomInt(1, 12), [15, 30, 45][randomInt(0, 2)])),
+            explanation
+          );
+        }
+
+        if (levelIndex === 2) {
+          const hour = randomInt(1, 12);
+          const minute = randomInt(1, 11) * 5;
+          const minuteMark = minute / 5;
+          const correct = formatTime(hour, minute);
+          return q(
+            hour,
+            minute,
+            correct,
+            buildAnswers(correct, () => formatTime(randomInt(1, 12), randomInt(1, 11) * 5)),
+            `Długa wskazówka jest na ${minuteMark}. ${minuteMark} razy 5 minut to ${minute} minut, czyli ${correct}.`
+          );
+        }
+
+        const hour = randomInt(1, 12);
+        let minute = randomInt(1, 59);
+        while (minute % 5 === 0) {
+          minute = randomInt(1, 59);
+        }
+        const correct = formatTime(hour, minute);
+        const roundedMinute = clamp(Math.round(minute / 5) * 5, 1, 59);
+        return q(
+          hour,
+          minute,
+          correct,
+          buildAnswers(correct, () => {
+            const variant = randomInt(0, 2);
+            if (variant === 0) return formatTime(hour, roundedMinute === minute ? clamp(minute + 1, 1, 59) : roundedMinute);
+            if (variant === 1) return formatTime(normalizeHour(hour + 1), minute);
+            return formatTime(randomInt(1, 12), randomInt(1, 59));
+          }),
+          `Policz małe kreski. Długa wskazówka jest na ${minute}. minucie, więc to ${correct}.`
+        );
+      }
+
+      function formatTime(hour, minute) {
+        return `${hour}:${String(minute).padStart(2, "0")}`;
+      }
+
+      function startStars() {
+        const stars = [];
+        for (let i = 0; i < 160; i += 1) {
+          stars.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            r: 0.7 + Math.random() * 1.9,
+            speed: 0.08 + Math.random() * 0.35,
+            twinkle: Math.random() * TAU
+          });
+        }
+        state.stars = stars;
+      }
+
+      function musicLabel() {
+        return `Muzyka: ${state.musicEnabled ? "wł." : "wył."}`;
+      }
+
+      function showStartScreen() {
+        state.playing = false;
+        closeTerminal();
+        hud.classList.add("hidden");
+        touchControls.classList.remove("playing");
+        robotSpeech.classList.add("hidden");
+        screen.classList.remove("hidden");
+        setMusicTrack("moonlight");
+        screen.innerHTML = `
+          <div class="panel">
+            <div class="hero-layout">
+              <div>
+                <div class="eyebrow">Platformowa przygoda edukacyjna</div>
+                <h1>Zegarowi Strażnicy Galaktyki</h1>
+                <p>Młody odkrywca rusza przez planety, portale i świetliste platformy. Każda brama otwiera się wtedy, gdy po zręcznym przejściu toru pociągniesz dźwignię z poprawną godziną.</p>
+                <div class="actions">
+                  <button class="btn green" type="button" data-action="adventure">Rozpocznij przygodę</button>
+                  <button class="btn secondary" type="button" data-action="levels">Wybierz poziom</button>
+                  <button class="btn secondary" type="button" data-action="toggleMusic">${musicLabel()}</button>
+                </div>
+              </div>
+              <div class="hero-art" aria-hidden="true">
+                <div class="tiny-astronaut">
+                  <span class="pack"></span>
+                  <span class="torso"></span>
+                  <span class="chest"></span>
+                  <span class="strap-a"></span>
+                  <span class="strap-b"></span>
+                  <span class="neck"></span>
+                  <span class="head"></span>
+                  <span class="hair"></span>
+                  <span class="eye-a"></span>
+                  <span class="eye-b"></span>
+                  <span class="helmet"></span>
+                  <span class="arm-a"></span>
+                  <span class="arm-b"></span>
+                  <span class="leg-a"></span>
+                  <span class="leg-b"></span>
+                </div>
+                <div class="tiny-ship"></div>
+                <div class="tiny-robot"></div>
+                <div class="tiny-sword"></div>
+              </div>
+            </div>
+          </div>
+        `;
+        updateMusicButton();
+      }
+
+      function showLevelScreen() {
+        closeTerminal();
+        setMusicTrack("moonlight");
+        screen.classList.remove("hidden");
+        screen.innerHTML = `
+          <div class="panel">
+            <div class="eyebrow">Wybór planety</div>
+            <h2>Wybierz poziom trudności</h2>
+            <p>Każdy poziom ma 15 etapów: pierwsze 5 z podpowiedziami i dźwigniami, drugie 5 bez podpowiedzi i z dźwigniami, ostatnie 5 bez podpowiedzi i z komputerem bramy.</p>
+            <div class="level-grid">
+              ${levels.map((level, index) => `
+                <button class="level-card" type="button" data-action="level" data-level="${index}">
+                  <strong>Poziom ${index + 1}: ${level.shortName}</strong>
+                  <span>${level.name}</span>
+                  <span>${levelStageCount(level)} plansz do ukończenia</span>
+                  <span>1-5: podpowiedzi + dźwignie</span>
+                  <span>6-10: dźwignie bez podpowiedzi</span>
+                  <span>11-15: komputer bramy</span>
+                </button>
+              `).join("")}
+            </div>
+            <div class="row-actions">
+              <button class="btn green" type="button" data-action="adventure">Przygoda od początku</button>
+              <button class="btn secondary" type="button" data-action="toggleMusic">${musicLabel()}</button>
+              <button class="btn secondary" type="button" data-action="back">Powrót</button>
+            </div>
+          </div>
+        `;
+        updateMusicButton();
+      }
+
+      function showTutorial(startConfig) {
+        state.pendingStart = startConfig;
+        setMusicTrack("moonlight");
+        screen.classList.remove("hidden");
+        screen.innerHTML = `
+          <div class="panel narrow">
+            <div class="eyebrow">Krótki samouczek</div>
+            <h2>Jak otwierać kosmiczne portale?</h2>
+            <div class="tutorial-list">
+              <div class="tip">Poruszaj się klawiszami <strong>strzałek</strong> albo <strong>WASD</strong>.</div>
+              <div class="tip">Naciśnij <strong>W</strong> albo <strong>strzałkę w górę</strong>, żeby skoczyć.</div>
+              <div class="tip">Podejdź do jasno oznaczonej skrzyni PCHAJ i przesuń ją pod wysoki pulpit.</div>
+              <div class="tip">Przy dźwigni naciśnij <strong>spację</strong>. Na telefonie użyj zielonego przycisku SPACJA.</div>
+              <div class="tip">W końcowych planszach podłącz się do komputera i wpisz godzinę cyframi, np. <strong>8:45</strong>.</div>
+            </div>
+            <p>Krótka wskazówka pokazuje godzinę, a długa minuty. Skacz po platformach i omijaj pionowe czerwone lasery w dobrym momencie. Zła dźwignia, błędny kod albo laser uruchamia impuls czasu i etap zaczyna się od początku z podpowiedzią robota.</p>
+            <div class="row-actions">
+              <button class="btn green" type="button" data-action="tutorialStart">Start</button>
+              <button class="btn secondary" type="button" data-action="toggleMusic">${musicLabel()}</button>
+              <button class="btn secondary" type="button" data-action="levels">Wybierz inną planetę</button>
+            </div>
+          </div>
+        `;
+        updateMusicButton();
+      }
+
+      function showStageComplete() {
+        const level = levels[state.levelIndex];
+        const stageTotal = levelStageCount(level);
+        const isLastStage = state.stageIndex >= stageTotal - 1;
+        const isLastLevel = state.levelIndex >= levels.length - 1;
+
+        state.playing = false;
+        touchControls.classList.remove("playing");
+        screen.classList.remove("hidden");
+        setMusicTrack("moonlight");
+
+        let title = "Etap ukończony!";
+        let copy = `${randomMotivation()} Plansza ${state.stageIndex + 1}/${stageTotal} za Tobą.`;
+        let primary = "Następny etap";
+        let action = "nextStage";
+
+        if (isLastStage && isLastLevel) {
+          title = "Galaktyka uratowana!";
+          copy = "Ostatni kod czasu stabilizuje galaktykę. Jesteś Zegarowym Mistrzem!";
+          primary = "Zagraj od początku";
+          action = "adventure";
+        } else if (isLastStage) {
+          title = "Planeta ukończona!";
+          copy = `${level.name} świeci spokojnie. Możesz ruszyć na następną planetę.`;
+          primary = state.mode === "adventure" ? "Następna planeta" : "Wybierz planetę";
+          action = state.mode === "adventure" ? "nextLevel" : "levels";
+        }
+
+        screen.innerHTML = `
+          <div class="panel narrow">
+            <div class="eyebrow">${level.planet}</div>
+            <h2>${title}</h2>
+            <p>${copy}</p>
+            <p><strong>Poprawna godzina:</strong> ${state.currentQuestion.digital}. ${state.currentQuestion.explanation}</p>
+            <div class="row-actions">
+              <button class="btn green" type="button" data-action="${action}">${primary}</button>
+              <button class="btn secondary" type="button" data-action="levels">Poziomy</button>
+              <button class="btn secondary" type="button" data-action="toggleMusic">${musicLabel()}</button>
+              <button class="btn secondary" type="button" data-action="back">Menu</button>
+            </div>
+          </div>
+        `;
+        updateMusicButton();
+      }
+
+      function randomMotivation() {
+        return motivational[Math.floor(Math.random() * motivational.length)];
+      }
+
+      function beginGame(config) {
+        initAudio();
+        state.mode = config.mode === "level" ? "level" : "adventure";
+        state.levelIndex = config.levelIndex || 0;
+        state.stageIndex = config.stageIndex || 0;
+        state.stageTask = null;
+        screen.classList.add("hidden");
+        hud.classList.remove("hidden");
+        touchControls.classList.add("playing");
+        setupStage();
+        setMusicTrack("heroic");
+      }
+
+      function setupStage(options = {}) {
+        const level = levels[state.levelIndex];
+        const keepStageTask = (options.preserveQuestion || options.preserveLayout) && state.stageTask;
+        const task = keepStageTask ? state.stageTask : createStageTask(level);
+        state.stageTask = task;
+
+        state.boss = null;
+        if (task.boss) {
+          state.boss = {
+            questions: task.questions,
+            index: 0,
+            hits: 0
+          };
+          applyQuestion(task.questions[0]);
+        } else {
+          applyQuestion(task);
+        }
+
+        state.gateOpen = false;
+        state.stageSolved = false;
+        state.resetTimer = 0;
+        state.stageTime = 0;
+        state.hintShown = false;
+        state.particles.length = 0;
+        if (!options.preserveLayout || !state.layout) {
+          state.layout = createStageLayout();
+        }
+        state.crate = {
+          x: state.layout.crateStartX,
+          y: state.layout.crateY,
+          w: state.layout.crateW,
+          h: state.layout.crateH,
+          minX: state.layout.crateMinX,
+          maxX: state.layout.crateTargetX,
+          glow: 0
+        };
+        state.activeLever = null;
+        state.activeTerminal = false;
+        closeTerminal();
+        player.x = 90;
+        player.y = 470;
+        player.vx = 0;
+        player.vy = 0;
+        player.answerCooldown = 0;
+        player.actionCooldown = 0;
+        player.dead = false;
+        player.coyote = 0;
+        player.onLadder = false;
+        state.cameraX = 0;
+        state.playing = true;
+        const finalInstruction = state.answerMode === "terminal"
+          ? "Po torze zręcznościowym podejdź do komputera bramy, naciśnij spację i wpisz godzinę cyframi."
+          : "Po torze zręcznościowym wybierz dobrą dźwignię spacją.";
+        setRobot(`${level.guide} Skacz tylko po platformach. Pionowe lasery przeskakuj, gdy platforma jest w dobrym miejscu. ${finalInstruction}`, 6400);
+        updateHud();
+      }
+
+      function createStageLayout() {
+        const startGround = { x: -80, y: 650, w: 330, h: 90, active: true };
+        const crateGround = { x: 1420, y: 650, w: 780, h: 90, active: true, safeZone: true };
+        const endGround = { x: 2700, y: 650, w: 460, h: 90, active: true };
+        const answerDeck = { x: 2020, y: 420, w: 650, h: 32, active: true, deck: true };
+        const crateMinX = 1480;
+        const crateTargetX = 1920;
+        const crateSafeStart = crateMinX - 80;
+        const variants = [
+          {
+            platforms: [
+              startGround,
+              crateGround,
+              endGround,
+              { x: 50, y: 575, w: 210, h: 32, active: true },
+              { x: 330, y: 598, w: 116, h: 26, active: true },
+              { x: 535, y: 542, w: 138, h: 26, active: true },
+              { x: 770, y: 590, w: 138, h: 26, active: true },
+              { x: 1010, y: 550, w: 130, h: 26, active: true },
+              { x: 1215, y: 590, w: 130, h: 26, active: true },
+              answerDeck
+            ],
+            lasers: [
+              { x: 454, y: 494, w: 16, h: 156, label: "LASER", vertical: true },
+              { x: 668, y: 500, w: 16, h: 150, label: "LASER", vertical: true },
+              { x: 934, y: 488, w: 16, h: 162, label: "LASER", vertical: true },
+              { x: 1162, y: 498, w: 16, h: 152, label: "LASER", vertical: true }
+            ]
+          },
+          {
+            platforms: [
+              startGround,
+              crateGround,
+              endGround,
+              { x: 46, y: 590, w: 170, h: 30, active: true },
+              { x: 286, y: 552, w: 126, h: 26, active: true },
+              { x: 510, y: 602, w: 122, h: 26, active: true },
+              { x: 746, y: 548, w: 140, h: 26, active: true },
+              { x: 1002, y: 590, w: 120, h: 26, active: true },
+              { x: 1228, y: 552, w: 122, h: 26, active: true },
+              answerDeck
+            ],
+            lasers: [
+              { x: 236, y: 502, w: 16, h: 148, label: "LASER", vertical: true },
+              { x: 452, y: 490, w: 16, h: 160, label: "LASER", vertical: true },
+              { x: 908, y: 498, w: 16, h: 152, label: "LASER", vertical: true },
+              { x: 1154, y: 488, w: 16, h: 162, label: "LASER", vertical: true }
+            ]
+          },
+          {
+            platforms: [
+              startGround,
+              crateGround,
+              endGround,
+              { x: 64, y: 560, w: 128, h: 28, active: true },
+              { x: 278, y: 610, w: 120, h: 26, active: true },
+              { x: 492, y: 550, w: 132, h: 26, active: true },
+              { x: 732, y: 592, w: 116, h: 26, active: true },
+              { x: 982, y: 540, w: 132, h: 26, active: true },
+              { x: 1218, y: 592, w: 128, h: 26, active: true },
+              answerDeck
+            ],
+            lasers: [
+              { x: 220, y: 500, w: 16, h: 150, label: "LASER", vertical: true },
+              { x: 424, y: 492, w: 16, h: 158, label: "LASER", vertical: true },
+              { x: 852, y: 500, w: 16, h: 150, label: "LASER", vertical: true },
+              { x: 1146, y: 490, w: 16, h: 160, label: "LASER", vertical: true }
+            ]
+          },
+          {
+            platforms: [
+              startGround,
+              crateGround,
+              endGround,
+              { x: 38, y: 584, w: 184, h: 30, active: true },
+              { x: 308, y: 544, w: 118, h: 26, active: true },
+              { x: 532, y: 596, w: 116, h: 26, active: true },
+              { x: 778, y: 560, w: 122, h: 26, active: true },
+              { x: 1028, y: 596, w: 116, h: 26, active: true },
+              { x: 1240, y: 548, w: 124, h: 26, active: true },
+              answerDeck
+            ],
+            lasers: [
+              { x: 252, y: 498, w: 16, h: 152, label: "LASER", vertical: true },
+              { x: 466, y: 486, w: 16, h: 164, label: "LASER", vertical: true },
+              { x: 904, y: 498, w: 16, h: 152, label: "LASER", vertical: true },
+              { x: 1168, y: 492, w: 16, h: 158, label: "LASER", vertical: true }
+            ]
+          }
+        ];
+        const variant = variants[Math.floor(Math.random() * variants.length)];
+        const safeLasers = variant.lasers.filter((laser) => laser.x + laser.w < crateSafeStart);
+        const difficultyLasers = clamp(state.levelIndex + 1, 1, safeLasers.length);
+        const lasers = shuffle(safeLasers.slice()).slice(0, difficultyLasers).sort((a, b) => a.x - b.x);
+
+        return {
+          platforms: variant.platforms.map((platform, index) => decoratePlatform(platform, index)),
+          lasers: lasers.map((laser, index) => ({ ...laser, phase: Math.random() * TAU + index })),
+          crateStartX: 1570,
+          crateY: 568,
+          crateW: 78,
+          crateH: 82,
+          crateMinX,
+          crateTargetX,
+          crateTargetY: 650
+        };
+      }
+
+      function createStageTask(level) {
+        const question = randomQuestionForLevel(state.levelIndex);
+        return {
+          ...question,
+          answerMode: isTerminalStage(state.levelIndex, state.stageIndex) ? "terminal" : "lever",
+          minuteLabels: minuteLabelsForStage(state.levelIndex, state.stageIndex)
+        };
+      }
+
+      function decoratePlatform(platform, index) {
+        const canFloat = platform.w <= 220 && platform.y < 635 && !platform.deck && !platform.safeZone;
+        return {
+          ...platform,
+          baseY: platform.y,
+          floatAmp: canFloat ? (5 + index % 3 * 2) * 4 : 0,
+          floatSpeed: canFloat ? 1.05 + index % 4 * 0.18 : 0,
+          floatPhase: canFloat ? Math.random() * TAU + index * 0.7 : 0
+        };
+      }
+
+      function platformY(platform, time = state.stageTime) {
+        const baseY = platform.baseY ?? platform.y;
+        if (!platform.floatAmp) return baseY;
+        return Math.round(baseY + Math.sin(time * platform.floatSpeed + platform.floatPhase) * platform.floatAmp);
+      }
+
+      function resolvedPlatform(platform, time = state.stageTime) {
+        return { ...platform, y: platformY(platform, time) };
+      }
+
+      function applyQuestion(question, answerMode = question.answerMode || "lever") {
+        state.currentQuestion = question;
+        state.answerMode = answerMode;
+        state.activeLever = null;
+        state.activeTerminal = false;
+        state.terminal = answerMode === "terminal"
+          ? { x: 2350, y: 420, w: 136, h: 120, pulse: 0, error: 0 }
+          : null;
+        if (answerMode === "terminal") {
+          state.answerLevers = [];
+          return;
+        }
+
+        const shuffled = shuffle(question.answers.slice());
+        const xs = [2098, 2290, 2482];
+        state.answerLevers = shuffled.map((answer, index) => ({
+          x: xs[index],
+          y: 420,
+          w: 42,
+          h: 72,
+          label: answer,
+          correct: answer === question.correct,
+          pulled: false,
+          pulse: 0,
+          shake: 0
+        }));
+      }
+
+      function shuffle(items) {
+        for (let i = items.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [items[i], items[j]] = [items[j], items[i]];
+        }
+        return items;
+      }
+
+      function updateHud() {
+        const level = levels[state.levelIndex];
+        document.getElementById("hudPlanet").textContent = `Poziom ${state.levelIndex + 1}: ${level.shortName}`;
+        document.getElementById("hudStage").textContent = `Etap ${state.stageIndex + 1}/${levelStageCount(level)}`;
+      }
+
+      function initAudio() {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            audioCtx = new AudioContext();
+          }
+        }
+        if (audioCtx && audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+        ensureMusicMaster();
+      }
+
+      function playTone(frequency, duration, type, gainValue, delay = 0) {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime + delay;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(gainValue, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.03);
+      }
+
+      function playSuccess() {
+        playTone(523.25, 0.18, "sine", 0.08);
+        playTone(659.25, 0.18, "sine", 0.07, 0.09);
+        playTone(783.99, 0.24, "triangle", 0.07, 0.18);
+      }
+
+      function playWrong() {
+        playTone(220, 0.16, "triangle", 0.055);
+        playTone(196, 0.18, "sine", 0.045, 0.12);
+      }
+
+      function playPortal() {
+        playTone(392, 0.16, "sine", 0.06);
+        playTone(784, 0.32, "triangle", 0.045, 0.08);
+      }
+
+      function ensureMusicMaster() {
+        if (!audioCtx || music.master) return;
+        music.master = audioCtx.createGain();
+        music.master.gain.value = state.musicEnabled ? 0.16 : 0;
+        music.master.connect(audioCtx.destination);
+      }
+
+      function updateMusicButton() {
+        const label = musicLabel();
+        musicButton.textContent = label;
+        musicButton.setAttribute("aria-pressed", String(state.musicEnabled));
+        musicButton.classList.toggle("off", !state.musicEnabled);
+        screen.querySelectorAll("[data-action='toggleMusic']").forEach((button) => {
+          button.textContent = label;
+        });
+      }
+
+      function loadMusicPreference() {
+        try {
+          const saved = localStorage.getItem("zegarowi-straznicy-muzyka");
+          if (saved !== null) state.musicEnabled = saved === "true";
+        } catch (error) {
+          state.musicEnabled = true;
+        }
+        updateMusicButton();
+      }
+
+      function saveMusicPreference() {
+        try {
+          localStorage.setItem("zegarowi-straznicy-muzyka", String(state.musicEnabled));
+        } catch (error) {
+          // Muzyka ma działać także wtedy, gdy localStorage jest niedostępne.
+        }
+      }
+
+      function toggleMusic() {
+        state.musicEnabled = !state.musicEnabled;
+        saveMusicPreference();
+        if (state.musicEnabled) {
+          initAudio();
+          startMusic(state.playing ? "heroic" : "moonlight");
+        } else {
+          stopMusic();
+        }
+        updateMusicButton();
+      }
+
+      function setMusicTrack(track) {
+        const profileKey = musicProfileKey(track);
+        const changed = music.track !== track || music.profileKey !== profileKey;
+        if (changed) {
+          music.track = track;
+          music.profileKey = profileKey;
+          resetMusicTimeline();
+        }
+        if (state.musicEnabled && audioCtx) {
+          startMusic(track);
+        } else {
+          updateMusicButton();
+        }
+      }
+
+      function resetMusicTimeline() {
+        const profile = music.track === "heroic" ? activeHeroicProfile() : null;
+        const config = music.track === "moonlight"
+          ? { tempo: 54, stepsPerBeat: 3, totalSteps: 96 }
+          : { tempo: profile.tempo, stepsPerBeat: 4, totalSteps: 512 };
+        music.beatSeconds = 60 / config.tempo;
+        music.stepsPerBeat = config.stepsPerBeat;
+        music.totalSteps = config.totalSteps;
+        music.step = 0;
+        music.nextTime = audioCtx ? audioCtx.currentTime + 0.08 : 0;
+        music.profileKey = musicProfileKey(music.track);
+      }
+
+      function startMusic(track = music.track) {
+        if (!state.musicEnabled || !audioCtx) {
+          updateMusicButton();
+          return;
+        }
+        ensureMusicMaster();
+        const profileKey = musicProfileKey(track);
+        if (music.track !== track || music.profileKey !== profileKey) {
+          music.track = track;
+          music.profileKey = profileKey;
+          resetMusicTimeline();
+        } else if (!music.nextTime || music.nextTime < audioCtx.currentTime) {
+          resetMusicTimeline();
+        }
+        music.master.gain.cancelScheduledValues(audioCtx.currentTime);
+        music.master.gain.setTargetAtTime(music.track === "moonlight" ? 0.13 : 0.16, audioCtx.currentTime, 0.18);
+        if (!music.timer) {
+          music.timer = setInterval(scheduleMusic, 90);
+        }
+        scheduleMusic();
+        updateMusicButton();
+      }
+
+      function musicProfileKey(track) {
+        if (track !== "heroic") return track;
+        return `${track}:${state.levelIndex}:${state.stageIndex}:${state.mode}`;
+      }
+
+      function activeHeroicProfile() {
+        const base = levelMusicProfiles[state.levelIndex] || levelMusicProfiles[0];
+        const variant = stageMusicVariants[state.stageIndex % stageMusicVariants.length] || stageMusicVariants[0];
+        return {
+          ...base,
+          tempo: base.tempo + variant.tempoAdd,
+          transpose: base.transpose + variant.transposeAdd,
+          barOffset: base.barOffset + variant.barShift,
+          density: base.density * variant.density,
+          accentGain: base.accentGain * variant.accent,
+          stageColor: variant.color
+        };
+      }
+
+      function stopMusic() {
+        if (music.timer) {
+          clearInterval(music.timer);
+          music.timer = null;
+        }
+        if (audioCtx && music.master) {
+          music.master.gain.cancelScheduledValues(audioCtx.currentTime);
+          music.master.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.08);
+        }
+      }
+
+      function scheduleMusic() {
+        if (!audioCtx || !state.musicEnabled || !music.master) return;
+        const stepSeconds = music.beatSeconds / music.stepsPerBeat;
+        const horizon = audioCtx.currentTime + 1.15;
+        if (music.nextTime < audioCtx.currentTime) {
+          music.nextTime = audioCtx.currentTime + 0.04;
+        }
+        while (music.nextTime < horizon) {
+          if (music.track === "moonlight") {
+            scheduleMoonlightStep(music.step, music.nextTime);
+          } else {
+            scheduleHeroicStep(music.step, music.nextTime);
+          }
+          music.step = (music.step + 1) % music.totalSteps;
+          music.nextTime += stepSeconds;
+        }
+      }
+
+      function scheduleHeroicStep(step, time) {
+        const profile = activeHeroicProfile();
+        const stepInBar = step % 16;
+        const rawBar = Math.floor(step / 16);
+        const bar = (rawBar + profile.barOffset) % heroicBars.length;
+        const data = heroicBars[bar];
+        const bass = data.bass + profile.transpose + profile.bassOctave;
+        const chord = data.chord.map((note) => note + profile.transpose);
+        const motif = [chord[2], chord[2], chord[4] || chord[3] + 7, chord[3] || chord[2] + 3];
+        const arpeggio = [chord[1], chord[2], chord[3], chord[4] || chord[2] + 7, chord[3], chord[2], chord[1], chord[2]]
+          .map((note) => note + profile.arpeggioOctave);
+        const phrase = Math.floor(rawBar / 8);
+        const dynamic = data.dyn * (phrase === 2 ? 1.08 : 1);
+        const arpIndex = (step + profile.stageColor) % arpeggio.length;
+
+        playMusicNote(arpeggio[arpIndex], time, 0.18, "strings", 0.34 * dynamic * profile.stringGain * profile.density);
+        if ((phrase === 2 || profile.density > 1.1) && step % 2 === 1) {
+          playMusicNote((arpeggio[(arpIndex + 3) % arpeggio.length] || chord[2]) + 12, time, 0.12, "strings", 0.13 * dynamic * profile.stringGain * profile.density);
+        }
+
+        if (stepInBar === 0 || stepInBar === 8) {
+          playMusicNote(bass, time, profile.stageColor === 3 ? 0.78 : 0.55, "bass", 0.78 * dynamic * profile.bassGain);
+          playMusicNote(bass + 12, time, 0.30, "bass", 0.32 * dynamic * profile.bassGain);
+        }
+
+        const motifIndex = profile.motif.indexOf(stepInBar);
+        if (motifIndex !== -1) {
+          const longNote = motifIndex === profile.motif.length - 1;
+          const octaveKick = profile.stageColor === 1 && motifIndex >= 2 ? 12 : 0;
+          playMusicNote(motif[motifIndex % motif.length] + octaveKick, time, longNote ? 0.72 : 0.18, "brass", (longNote ? 0.78 : 0.46) * dynamic * profile.brassGain);
+        }
+
+        if (profile.accentBars.includes(bar) && stepInBar === 0) {
+          playMusicChord(chord.slice(1).concat([chord[2] + 12]), time, 0.46, "accent", 0.70 * dynamic * profile.accentGain);
+        }
+
+        if ((bar === 23 || bar === 31) && [0, 4, 8, 12].includes(stepInBar)) {
+          playMusicChord([bass + 24, chord[2] + 12, chord[3] + 12], time, 0.14, "accent", 0.56 * dynamic * profile.accentGain);
+        }
+
+        if ((bar >= 8 && bar <= 11 && stepInBar === 4) || (profile.stageColor === 1 && stepInBar === 10)) {
+          playMusicNote((chord[4] || chord[3]) + 12, time, 1.1, "flute", 0.24 * dynamic * profile.fluteGain);
+        }
+
+        if (profile.sparkle > 0.5 && step % (profile.stageColor === 1 ? 3 : 6) === 0) {
+          const sparkleNote = chord[(step + rawBar) % chord.length] + 24;
+          playMusicNote(sparkleNote, time, 0.10, "flute", 0.08 * dynamic * profile.sparkle);
+        }
+
+        if (profile.stageColor === 2 && [4, 12].includes(stepInBar)) {
+          playMusicChord([chord[1], chord[3], chord[4] || chord[3] + 4].map((note) => note + 12), time, 0.20, "accent", 0.22 * dynamic * profile.accentGain);
+        }
+
+        if (profile.stageColor === 3 && stepInBar === 0) {
+          playMusicNote(Math.max(24, bass - 12), time, 1.35, "bass", 0.38 * dynamic * profile.bassGain);
+        }
+      }
+
+      function scheduleMoonlightStep(step, time) {
+        const stepInBar = step % 12;
+        const bar = Math.floor(step / 12) % moonlightBars.length;
+        const data = moonlightBars[bar];
+        const triplet = step % 3;
+        const pattern = [data.chord[2], data.chord[3], data.chord[4] || data.chord[3] + 4];
+
+        playMusicNote(pattern[triplet], time, 0.70, "piano", triplet === 0 ? 0.34 : 0.25);
+        if (stepInBar === 0) {
+          playMusicNote(data.bass, time, 3.8, "pianoBass", 0.48);
+          playMusicNote(data.bass + 12, time + 0.02, 3.2, "pianoBass", 0.22);
+        }
+        if (stepInBar === 3 || stepInBar === 9) {
+          playMusicNote(data.melody, time, 1.6, "pianoLead", 0.30);
+        }
+      }
+
+      function playMusicChord(notes, time, beats, instrument, velocity) {
+        notes.forEach((note, index) => {
+          playMusicNote(note, time + index * 0.006, beats, instrument, velocity * (index === 0 ? 0.92 : 1));
+        });
+      }
+
+      function playMusicNote(midi, time, beats, instrument, velocity = 1) {
+        if (!audioCtx || !music.master) return;
+        const preset = musicPreset(instrument);
+        const duration = Math.max(0.045, beats * music.beatSeconds);
+        const release = preset.release;
+        const level = Math.max(0.0001, preset.gain * velocity);
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        osc.type = preset.type;
+        osc.frequency.setValueAtTime(midiToFrequency(midi), time);
+        if (preset.detune) osc.detune.setValueAtTime(preset.detune, time);
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(preset.filter, time);
+        filter.Q.setValueAtTime(preset.q, time);
+
+        gain.gain.setValueAtTime(0.0001, time);
+        gain.gain.exponentialRampToValueAtTime(level, time + preset.attack);
+        gain.gain.setTargetAtTime(level * preset.sustain, time + Math.max(preset.attack, duration * 0.42), duration * 0.32);
+        gain.gain.exponentialRampToValueAtTime(0.0001, time + duration + release);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(music.master);
+        osc.start(time);
+        osc.stop(time + duration + release + 0.05);
+
+        if (preset.secondType) {
+          const osc2 = audioCtx.createOscillator();
+          osc2.type = preset.secondType;
+          osc2.frequency.setValueAtTime(midiToFrequency(midi), time);
+          osc2.detune.setValueAtTime(preset.secondDetune || 0, time);
+          osc2.connect(filter);
+          osc2.start(time);
+          osc2.stop(time + duration + release + 0.05);
+        }
+      }
+
+      function musicPreset(instrument) {
+        const presets = {
+          strings: { type: "sawtooth", secondType: "triangle", secondDetune: 5, gain: 0.010, attack: 0.01, sustain: 0.56, release: 0.08, filter: 1750, q: 0.65 },
+          brass: { type: "square", secondType: "sawtooth", secondDetune: -7, gain: 0.020, attack: 0.012, sustain: 0.64, release: 0.10, filter: 1050, q: 0.55 },
+          bass: { type: "triangle", secondType: "sine", secondDetune: -4, gain: 0.025, attack: 0.012, sustain: 0.70, release: 0.18, filter: 650, q: 0.55 },
+          accent: { type: "sawtooth", secondType: "square", secondDetune: 3, gain: 0.018, attack: 0.006, sustain: 0.52, release: 0.12, filter: 1250, q: 0.80 },
+          flute: { type: "sine", secondType: "triangle", secondDetune: 6, gain: 0.015, attack: 0.035, sustain: 0.78, release: 0.22, filter: 2200, q: 0.45 },
+          piano: { type: "triangle", secondType: "sine", secondDetune: 4, gain: 0.020, attack: 0.006, sustain: 0.34, release: 0.46, filter: 1900, q: 0.50 },
+          pianoBass: { type: "triangle", secondType: "sine", secondDetune: -5, gain: 0.026, attack: 0.010, sustain: 0.42, release: 0.72, filter: 850, q: 0.42 },
+          pianoLead: { type: "sine", secondType: "triangle", secondDetune: 3, gain: 0.022, attack: 0.020, sustain: 0.72, release: 0.62, filter: 1800, q: 0.45 }
+        };
+        return presets[instrument] || presets.piano;
+      }
+
+      function midiToFrequency(midi) {
+        return 440 * Math.pow(2, (midi - 69) / 12);
+      }
+
+      function setRobot(text, duration = 4200) {
+        robotSpeech.textContent = text;
+        robotSpeech.classList.remove("hidden");
+        robotTimer = duration;
+      }
+
+      function showFeedback(title, text, type = "ok", duration = 2500) {
+        feedback.className = `${type} visible`;
+        feedback.innerHTML = `<strong>${title}</strong><small>${text}</small>`;
+        feedbackTimer = duration;
+      }
+
+      function openTerminal() {
+        if (!state.terminal || state.stageSolved || player.dead) return;
+        state.terminalOpen = true;
+        actionQueued = false;
+        jumpQueued = false;
+        keys.left = false;
+        keys.right = false;
+        keys.jump = false;
+        keys.action = false;
+        keys.down = false;
+        terminalInput.value = "";
+        terminalMessage.textContent = "Wpisz godzinę cyframi. Dwukropek i kropka działają tak samo.";
+        drawTerminalClockPreview();
+        terminalOverlay.classList.remove("hidden");
+        setTimeout(() => terminalInput.focus(), 0);
+      }
+
+      function closeTerminal(restoreFocus = true) {
+        state.terminalOpen = false;
+        terminalOverlay.classList.add("hidden");
+        if (restoreFocus) {
+          terminalInput.blur();
+        }
+      }
+
+      function simplifyPolishText(value) {
+        const map = { ą: "a", ć: "c", ę: "e", ł: "l", ń: "n", ó: "o", ś: "s", ż: "z", ź: "z" };
+        return String(value).toLowerCase().replace(/[ąćęłńóśżź]/g, (letter) => map[letter] || letter);
+      }
+
+      function polishHourFromInput(value) {
+        const compact = simplifyPolishText(value).replace(/[^a-z]/g, "");
+        for (let i = 1; i <= 12; i += 1) {
+          if (compact === simplifyPolishText(hourNames[i]) || compact === simplifyPolishText(hourCaseNames[i])) {
+            return i;
+          }
+        }
+        return null;
+      }
+
+      function normalizeTypedTime(value) {
+        let raw = String(value).trim().toLowerCase();
+        if (!raw) return null;
+        raw = raw.replace(/[.,：]/g, ":").replace(/\s+/g, "");
+        const namedHour = polishHourFromInput(raw);
+        if (namedHour) {
+          return formatTime(namedHour, 0);
+        }
+
+        let hour = null;
+        let minute = null;
+        if (raw.includes(":")) {
+          const parts = raw.split(":");
+          if (parts.length !== 2 || !/^\d{1,2}$/.test(parts[0]) || !/^\d{1,2}$/.test(parts[1])) return null;
+          hour = Number(parts[0]);
+          minute = Number(parts[1]);
+        } else if (/^\d{1,4}$/.test(raw)) {
+          if (raw.length <= 2) {
+            hour = Number(raw);
+            minute = 0;
+          } else if (raw.length === 3) {
+            hour = Number(raw.slice(0, 1));
+            minute = Number(raw.slice(1));
+          } else {
+            hour = Number(raw.slice(0, 2));
+            minute = Number(raw.slice(2));
+          }
+        }
+
+        if (hour === 0) hour = 12;
+        if (!Number.isInteger(hour) || !Number.isInteger(minute) || hour < 1 || hour > 12 || minute < 0 || minute > 59) {
+          return null;
+        }
+        return formatTime(hour, minute);
+      }
+
+      function isCorrectTypedTime(value, question) {
+        return normalizeTypedTime(value) === question.digital;
+      }
+
+      function drawTerminalClockPreview() {
+        const question = state.currentQuestion;
+        if (!question || !terminalClockCtx) return;
+        const c = terminalClockCtx;
+        const cw = terminalClock.width;
+        const ch = terminalClock.height;
+        const cx = cw / 2;
+        const cy = ch / 2;
+        const r = 92;
+        const minuteLabels = question.minuteLabels || [];
+        c.imageSmoothingEnabled = false;
+        c.clearRect(0, 0, cw, ch);
+        c.fillStyle = "#07111f";
+        c.fillRect(0, 0, cw, ch);
+        c.fillStyle = "#edf7fa";
+        c.beginPath();
+        c.arc(cx, cy, r, 0, TAU);
+        c.fill();
+        c.strokeStyle = "#d8fbff";
+        c.lineWidth = 5;
+        c.stroke();
+        c.strokeStyle = "#07111f";
+        c.lineWidth = 6;
+        c.beginPath();
+        c.arc(cx, cy, r - 7, 0, TAU);
+        c.stroke();
+
+        for (let i = 0; i < 60; i += 1) {
+          const angle = i / 60 * TAU - Math.PI / 2;
+          const major = i % 5 === 0;
+          const quarter = i % 15 === 0;
+          const len = quarter ? 18 : major ? 14 : 7;
+          c.strokeStyle = quarter ? "#020711" : major ? "#07111f" : "rgba(7,17,31,0.60)";
+          c.lineWidth = quarter ? 4 : major ? 3 : 1.4;
+          c.beginPath();
+          c.moveTo(cx + Math.cos(angle) * (r - len - 5), cy + Math.sin(angle) * (r - len - 5));
+          c.lineTo(cx + Math.cos(angle) * (r - 9), cy + Math.sin(angle) * (r - 9));
+          c.stroke();
+        }
+
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.font = "900 21px Courier New, monospace";
+        for (let n = 1; n <= 12; n += 1) {
+          const angle = n / 12 * TAU - Math.PI / 2;
+          const tx = cx + Math.cos(angle) * r * 0.67;
+          const ty = cy + Math.sin(angle) * r * 0.67 + 1;
+          const padW = n >= 10 ? 27 : 20;
+          c.fillStyle = "rgba(210,226,232,0.94)";
+          c.fillRect(Math.round(tx - padW / 2), Math.round(ty - 10), padW, 20);
+          c.fillStyle = "#07111f";
+          c.fillText(String(n), tx, ty);
+        }
+
+        if (minuteLabels.length) {
+          c.font = "900 13px Courier New, monospace";
+          for (const minuteValue of minuteLabels) {
+            const angle = minuteValue / 60 * TAU - Math.PI / 2;
+            const tx = cx + Math.cos(angle) * r * 0.89;
+            const ty = cy + Math.sin(angle) * r * 0.89;
+            const label = String(minuteValue);
+            const padW = label.length > 1 ? 26 : 18;
+            c.fillStyle = "rgba(7,17,31,0.90)";
+            c.fillRect(Math.round(tx - padW / 2), Math.round(ty - 8), padW, 16);
+            c.fillStyle = "#b9ffff";
+            c.fillText(label, tx, ty + 1);
+          }
+        }
+
+        const minuteAngle = question.minute / 60 * TAU - Math.PI / 2;
+        const hourAngle = ((question.hour % 12) + question.minute / 60) / 12 * TAU - Math.PI / 2;
+        c.lineCap = "round";
+        c.strokeStyle = "#c07a45";
+        c.lineWidth = 8;
+        c.beginPath();
+        c.moveTo(cx + Math.cos(hourAngle + Math.PI) * r * 0.08, cy + Math.sin(hourAngle + Math.PI) * r * 0.08);
+        c.lineTo(cx + Math.cos(hourAngle) * r * 0.40, cy + Math.sin(hourAngle) * r * 0.40);
+        c.stroke();
+        c.strokeStyle = "#38e6df";
+        c.lineWidth = 5;
+        c.beginPath();
+        c.moveTo(cx + Math.cos(minuteAngle + Math.PI) * r * 0.10, cy + Math.sin(minuteAngle + Math.PI) * r * 0.10);
+        c.lineTo(cx + Math.cos(minuteAngle) * r * 0.84, cy + Math.sin(minuteAngle) * r * 0.84);
+        c.stroke();
+        c.fillStyle = "#07111f";
+        c.beginPath();
+        c.arc(cx, cy, 8, 0, TAU);
+        c.fill();
+        c.fillStyle = "#dffbff";
+        c.beginPath();
+        c.arc(cx - 2, cy - 2, 3, 0, TAU);
+        c.fill();
+      }
+
+      function submitTerminalAnswer(event) {
+        event.preventDefault();
+        if (!state.terminalOpen || !state.currentQuestion) return;
+        const typed = terminalInput.value;
+        const terminal = state.terminal || { x: player.x + player.w / 2, y: player.y };
+        const sourceX = terminal.x;
+        const sourceY = terminal.y - 82;
+        closeTerminal();
+        player.answerCooldown = 0.9;
+        player.actionCooldown = 0.35;
+
+        if (isCorrectTypedTime(typed, state.currentQuestion)) {
+          if (state.terminal) state.terminal.pulse = 1;
+          addBurst(sourceX, sourceY, levels[state.levelIndex].theme[1], 30);
+          playSuccess();
+          state.stageSolved = true;
+          state.gateOpen = true;
+          updateHud();
+          showFeedback("Kod przyjęty!", `To ${state.currentQuestion.digital}. Portal jest otwarty!`, "ok");
+          setRobot(`Poprawnie: ${state.currentQuestion.explanation}`, 5600);
+          return;
+        }
+
+        addBurst(sourceX, sourceY, "#ff8f9f", 24);
+        playWrong();
+        showFeedback("Błędny kod!", `${state.currentQuestion.explanation} Etap zaraz zacznie się od początku.`, "try", 4300);
+        setRobot("Komputer odrzucił kod. Po restarcie wpisz godzinę w formacie 7:05.", 4300);
+        restartStageWithFlash();
+      }
+
+      function triggerAnswer(lever) {
+        if (!state.playing || player.dead || player.answerCooldown > 0 || state.stageSolved && !state.boss) return;
+        player.answerCooldown = 0.9;
+        player.actionCooldown = 0.35;
+        lever.pulled = true;
+
+        if (lever.correct) {
+          lever.pulse = 1;
+          addBurst(lever.x + lever.w / 2, lever.y - 62, levels[state.levelIndex].theme[1], 26);
+          playSuccess();
+
+          if (state.boss) {
+            state.boss.hits += 1;
+            state.boss.index += 1;
+            if (state.boss.index < state.boss.questions.length) {
+              showFeedback("Celny odczyt!", `Zawirowanie słabnie. Trafienia: ${state.boss.hits}/3.`, "ok");
+              setRobot("Jeszcze jedna dźwignia. Oddychaj spokojnie i policz minuty.", 3600);
+              setTimeout(() => {
+                if (state.playing && state.boss && !state.stageSolved) {
+                  applyQuestion(state.boss.questions[state.boss.index]);
+                  state.stageTime = 0;
+                  state.hintShown = false;
+                }
+              }, 850);
+              return;
+            }
+          }
+
+          state.stageSolved = true;
+          state.gateOpen = true;
+          updateHud();
+          showFeedback(randomMotivation(), `To ${state.currentQuestion.digital}. Portal jest otwarty!`, "ok");
+          setRobot(`Poprawnie: ${state.currentQuestion.explanation}`, 5600);
+        } else {
+          lever.shake = 0.45;
+          addBurst(lever.x + lever.w / 2, lever.y - 54, "#ff8f9f", 22);
+          playWrong();
+          showFeedback("Zła dźwignia!", `${state.currentQuestion.explanation} Etap zaraz zacznie się od początku.`, "try", 4200);
+          setRobot("Impuls czasu trafia bohatera. Po restarcie spróbuj z właściwą dźwignią.", 4200);
+          restartStageWithFlash();
+        }
+      }
+
+      function restartStageWithFlash() {
+        player.dead = true;
+        player.vx = 0;
+        player.vy = -260;
+        state.resetTimer = 1.15;
+      }
+
+      function addBurst(x, y, color, count) {
+        for (let i = 0; i < count; i += 1) {
+          const angle = Math.random() * TAU;
+          const speed = 70 + Math.random() * 260;
+          state.particles.push({
+            x,
+            y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 60,
+            life: 0.5 + Math.random() * 0.75,
+            maxLife: 1.2,
+            color,
+            r: 2 + Math.random() * 4
+          });
+        }
+      }
+
+      function update(dt) {
+        if (!state.playing) return;
+
+        state.stageTime += dt;
+        if (feedbackTimer > 0) {
+          feedbackTimer -= dt * 1000;
+          if (feedbackTimer <= 0) {
+            feedback.classList.remove("visible");
+          }
+        }
+        if (robotTimer > 0) {
+          robotTimer -= dt * 1000;
+          if (robotTimer <= 0) {
+            robotSpeech.classList.add("hidden");
+          }
+        }
+
+        if (state.levelIndex === 3 && !state.stageSolved && state.stageTime > 7 && !state.hintShown) {
+          state.hintShown = true;
+          setRobot("Podpowiedź: podświetliłem długą wskazówkę. Policz małe kreski minutowe.", 5200);
+        }
+
+        if (state.terminalOpen) {
+          actionQueued = false;
+          jumpQueued = false;
+          updateParticles(dt);
+          return;
+        }
+
+        if (state.resetTimer > 0) {
+          state.resetTimer -= dt;
+          player.vy += 1200 * dt;
+          player.y += player.vy * dt;
+          player.x += Math.sin(state.resetTimer * 32) * 1.6;
+          updateParticles(dt);
+          if (state.resetTimer <= 0) {
+            setupStage({ preserveLayout: true });
+          }
+          actionQueued = false;
+          return;
+        }
+
+        const left = keys.left ? 1 : 0;
+        const right = keys.right ? 1 : 0;
+        const dir = right - left;
+        const accel = player.onGround ? 3200 : 2100;
+        const maxSpeed = 430;
+        const friction = player.onGround ? 2600 : 600;
+        const canClimb = canUseLadder();
+        player.onLadder = canClimb && rectsOverlap(playerHitbox(), ladderRect());
+
+        if (dir !== 0) {
+          player.vx += dir * accel * dt;
+          player.vx = clamp(player.vx, -maxSpeed, maxSpeed);
+          player.facing = dir;
+        } else {
+          player.vx = approach(player.vx, 0, friction * dt);
+        }
+
+        if (player.onLadder) {
+          player.coyote = 0;
+          player.onGround = false;
+          if (keys.jump) {
+            player.vy = -300;
+          } else if (keys.down) {
+            player.vy = 260;
+          } else {
+            player.vy = 0;
+          }
+          jumpQueued = false;
+        } else {
+          player.coyote = player.onGround ? 0.1 : Math.max(0, player.coyote - dt);
+        }
+
+        if (!player.onLadder && jumpQueued && (player.onGround || player.coyote > 0)) {
+          player.vy = -760;
+          player.onGround = false;
+          player.coyote = 0;
+          playTone(330, 0.08, "triangle", 0.035);
+        }
+        jumpQueued = false;
+
+        if (!player.onLadder) {
+          player.vy += 1800 * dt;
+          player.vy = Math.min(player.vy, 980);
+        }
+        player.answerCooldown = Math.max(0, player.answerCooldown - dt);
+        player.actionCooldown = Math.max(0, player.actionCooldown - dt);
+
+        const previous = {
+          x: player.x,
+          y: player.y,
+          bottom: player.y + player.h,
+          right: player.x + player.w
+        };
+
+        player.x += player.vx * dt;
+        handleBounds();
+        handleCratePush(previous);
+        handleGateCollision(previous);
+
+        player.y += player.vy * dt;
+        player.onGround = false;
+        collidePlatforms(previous, dt);
+        collideCrateVertical(previous);
+        handleGateCollision(previous);
+        handleLaserCollision();
+
+        state.activeLever = getNearbyLever();
+        state.activeTerminal = getNearbyTerminal();
+        if (actionQueued) {
+          if (state.activeTerminal && player.actionCooldown <= 0.02) {
+            player.actionCooldown = 0.35;
+            openTerminal();
+          } else if (state.activeLever && player.actionCooldown <= 0.02) {
+            triggerAnswer(state.activeLever);
+          } else if (!state.gateOpen && !state.stageSolved && player.actionCooldown <= 0.02) {
+            player.actionCooldown = 0.35;
+            setRobot(state.answerMode === "terminal" ? "Podejdź bliżej komputera bramy i naciśnij spację." : "Podejdź bliżej świecącej dźwigni i naciśnij spację.", 2600);
+          }
+          actionQueued = false;
+        }
+
+        if (player.y > H + 70) {
+          showFeedback("Kosmiczna przepaść!", "Etap zaczyna się od początku. Użyj platform i skrzyni spokojnie.", "try", 3000);
+          setRobot("To był upadek w próżnię. Wracamy na start etapu.", 3000);
+          restartStageWithFlash();
+        }
+
+        if (state.gateOpen && rectsOverlap(player, portalRect())) {
+          playPortal();
+          showStageComplete();
+        }
+
+        updateParticles(dt);
+        updateCamera();
+      }
+
+      function approach(value, target, amount) {
+        if (value < target) return Math.min(value + amount, target);
+        if (value > target) return Math.max(value - amount, target);
+        return target;
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function handleBounds() {
+        player.x = clamp(player.x, 12, state.worldWidth - player.w - 20);
+      }
+
+      function handleGateCollision(previous) {
+        if (state.gateOpen) return;
+        const gate = gateRect();
+        if (!rectsOverlap(player, gate)) return;
+
+        if (previous.right <= gate.x && player.vx > 0) {
+          player.x = gate.x - player.w;
+          player.vx = 0;
+        } else if (previous.x >= gate.x + gate.w && player.vx < 0) {
+          player.x = gate.x + gate.w;
+          player.vx = 0;
+        } else if (previous.bottom <= gate.y && player.vy > 0) {
+          player.y = gate.y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+        } else if (previous.y >= gate.y + gate.h && player.vy < 0) {
+          player.y = gate.y + gate.h;
+          player.vy = 0;
+        } else {
+          player.x = gate.x - player.w - 1;
+          player.vx = 0;
+        }
+      }
+
+      function handleCratePush(previous) {
+        const crate = state.crate;
+        if (!crate || player.dead || !rectsOverlap(player, crate)) return;
+
+        if (previous.right <= crate.x && player.vx > 0) {
+          const overlap = player.x + player.w - crate.x;
+          const nextX = clamp(crate.x + overlap, crate.minX, crate.maxX);
+          crate.glow = 0.8;
+          crate.x = nextX;
+          player.x = crate.x - player.w;
+          if (nextX >= crate.maxX - 0.1) {
+            player.vx = 0;
+          } else {
+            player.vx *= 0.72;
+          }
+        } else if (previous.x >= crate.x + crate.w && player.vx < 0) {
+          const overlap = crate.x + crate.w - player.x;
+          const nextX = clamp(crate.x - overlap, crate.minX, crate.maxX);
+          crate.glow = 0.8;
+          crate.x = nextX;
+          player.x = crate.x + crate.w;
+          if (nextX <= crate.minX + 0.1) {
+            player.vx = 0;
+          } else {
+            player.vx *= 0.72;
+          }
+        }
+      }
+
+      function collideCrateVertical(previous) {
+        const crate = state.crate;
+        if (!crate || !rectsOverlap(player, crate)) return;
+
+        if (previous.bottom <= crate.y + 6 && player.vy >= 0) {
+          player.y = crate.y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+        } else if (previous.y >= crate.y + crate.h - 4 && player.vy < 0) {
+          player.y = crate.y + crate.h;
+          player.vy = 40;
+        } else if (previous.right <= crate.x && player.vx > 0) {
+          player.x = crate.x - player.w;
+          player.vx = 0;
+        } else if (previous.x >= crate.x + crate.w && player.vx < 0) {
+          player.x = crate.x + crate.w;
+          player.vx = 0;
+        }
+      }
+
+      function collidePlatforms(previous, dt) {
+        const platforms = getPlatforms();
+        const previousTime = Math.max(0, state.stageTime - dt);
+        for (const rawPlatform of platforms) {
+          const p = resolvedPlatform(rawPlatform);
+          const prevP = resolvedPlatform(rawPlatform, previousTime);
+          const wasOverPlatform = previous.right > prevP.x + 4 && previous.x < prevP.x + prevP.w - 4;
+          const isOverPlatform = player.x + player.w > p.x + 4 && player.x < p.x + p.w - 4;
+          const wasStandingOnTop = wasOverPlatform && previous.bottom >= prevP.y - 12 && previous.bottom <= prevP.y + 10;
+          const closeToCurrentTop = player.y + player.h >= p.y - 18 && player.y + player.h <= p.y + 36;
+
+          if (wasStandingOnTop && isOverPlatform && closeToCurrentTop && player.vy >= 0) {
+            player.y = p.y - player.h;
+            player.vy = 0;
+            player.onGround = true;
+            continue;
+          }
+
+          if (!rectsOverlap(player, p)) continue;
+
+          if (previous.bottom <= prevP.y + 6 && player.vy >= 0) {
+            player.y = p.y - player.h;
+            player.vy = 0;
+            player.onGround = true;
+          } else if (previous.y >= prevP.y + prevP.h - 4 && player.vy < 0) {
+            player.y = p.y + p.h;
+            player.vy = 40;
+          } else if (previous.right <= p.x && player.vx > 0) {
+            player.x = p.x - player.w;
+            player.vx = 0;
+          } else if (previous.x >= p.x + p.w && player.vx < 0) {
+            player.x = p.x + p.w;
+            player.vx = 0;
+          }
+        }
+      }
+
+      function getPlatforms() {
+        return state.layout?.platforms || [
+          { x: -80, y: 650, w: 370, h: 90, active: true },
+          { x: 1420, y: 650, w: 780, h: 90, active: true, safeZone: true },
+          { x: 2700, y: 650, w: 460, h: 90, active: true },
+          { x: 42, y: 575, w: 220, h: 32, active: true },
+          { x: 318, y: 598, w: 110, h: 26, active: true },
+          { x: 492, y: 542, w: 132, h: 26, active: true },
+          { x: 732, y: 598, w: 132, h: 26, active: true },
+          { x: 1002, y: 560, w: 132, h: 26, active: true },
+          { x: 1220, y: 590, w: 132, h: 26, active: true },
+          { x: 2020, y: 420, w: 650, h: 32, active: true, deck: true }
+        ];
+      }
+
+      function handleLaserCollision() {
+        if (player.dead || state.stageSolved || state.gateOpen) return;
+        const lasers = state.layout?.lasers || [];
+        const hit = lasers.find((laser) => rectsOverlap(playerHitbox(), laser));
+        if (!hit) return;
+
+        addBurst(player.x + player.w / 2, player.y + player.h / 2, "#f0675e", 24);
+        playWrong();
+        showFeedback("Laser czasu!", "Przeskocz czerwone wiązki. Etap zaczyna się od początku.", "try", 3200);
+        setRobot("Pionowy laser jest aktywną przeszkodą. Poczekaj na dobrą wysokość platformy i skocz wcześniej.", 4200);
+        restartStageWithFlash();
+      }
+
+      function gateRect() {
+        return { x: 2700, y: 332, w: 48, h: 320 };
+      }
+
+      function ladderRect() {
+        const gate = gateRect();
+        return { x: gate.x - 28, y: gate.y + 8, w: gate.w + 56, h: gate.h - 8 };
+      }
+
+      function canUseLadder() {
+        return state.gateOpen && !player.dead;
+      }
+
+      function portalRect() {
+        return { x: 2870, y: 480, w: 110, h: 170 };
+      }
+
+      function playerHitbox() {
+        return {
+          x: player.x + 7,
+          y: player.y + 7,
+          w: player.w - 14,
+          h: player.h - 11
+        };
+      }
+
+      function getNearbyLever() {
+        if (!state.answerLevers.length || state.stageSolved || player.dead) return null;
+        const px = player.x + player.w / 2;
+        const py = player.y + player.h / 2;
+        return state.answerLevers.find((lever) => {
+          const lx = lever.x + lever.w / 2;
+          const ly = lever.y - 28;
+          return Math.abs(px - lx) < 58 && Math.abs(py - ly) < 94;
+        }) || null;
+      }
+
+      function getNearbyTerminal() {
+        if (!state.terminal || state.stageSolved || player.dead) return false;
+        const px = player.x + player.w / 2;
+        const py = player.y + player.h / 2;
+        const terminal = state.terminal;
+        return Math.abs(px - terminal.x) < 94 && Math.abs(py - (terminal.y - 54)) < 112;
+      }
+
+      function rectsOverlap(a, b) {
+        return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+      }
+
+      function updateParticles(dt) {
+        for (let i = state.particles.length - 1; i >= 0; i -= 1) {
+          const p = state.particles[i];
+          p.life -= dt;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vy += 260 * dt;
+          if (p.life <= 0) state.particles.splice(i, 1);
+        }
+
+        if (state.crate) {
+          state.crate.glow = Math.max(0, state.crate.glow - dt * 1.6);
+        }
+
+        for (const lever of state.answerLevers) {
+          lever.pulse = Math.max(0, lever.pulse - dt * 1.8);
+          lever.shake = Math.max(0, lever.shake - dt * 2.5);
+        }
+
+        if (state.terminal) {
+          state.terminal.pulse = Math.max(0, state.terminal.pulse - dt * 1.8);
+          state.terminal.error = Math.max(0, state.terminal.error - dt * 2.5);
+        }
+      }
+
+      function updateCamera() {
+        const target = clamp(player.x - 420, 0, state.worldWidth - W);
+        state.cameraX += (target - state.cameraX) * 0.1;
+      }
+
+      function draw(time) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.clearRect(0, 0, W, H);
+        drawBackground(time);
+        drawWorld(time);
+        drawQuestionPanel(time);
+      }
+
+      function drawBackground(time) {
+        const level = levels[state.levelIndex] || levels[0];
+        const bg = levelBackgrounds[state.levelIndex] || levelBackgrounds[0];
+        ctx.fillStyle = bg.space;
+        ctx.fillRect(0, 0, W, H);
+        drawNebulaLayer(time, bg);
+        drawSpaceBrushwork(time, bg);
+        drawStarField(time, bg);
+        drawLevelBackdrop(time);
+
+        ctx.fillStyle = bg.floor;
+        ctx.fillRect(0, 430, W, 290);
+        ctx.fillStyle = bg.floorLine;
+        for (let y = 438; y < H; y += 18) {
+          ctx.fillRect(0, y, W, 2);
+        }
+        ctx.fillStyle = "rgba(3,9,20,0.34)";
+        ctx.fillRect(0, 610, W, 110);
+        drawHangarSilhouette(time, level.theme[0]);
+      }
+
+      const levelBackgrounds = [
+        { space: "#02070d", floor: "#07131c", floorLine: "#0f2633", nebulaA: "rgba(38,84,92,0.34)", nebulaB: "rgba(110,49,63,0.26)", star: "#d4f3ef", haze: "#244d52", ink: "#10272a", ember: "#9d4b57" },
+        { space: "#03090d", floor: "#0a151c", floorLine: "#172b34", nebulaA: "rgba(135,93,54,0.20)", nebulaB: "rgba(70,112,94,0.16)", star: "#e9dcc0", haze: "#564636", ink: "#162a26", ember: "#b06146" },
+        { space: "#070609", floor: "#12141d", floorLine: "#2b2029", nebulaA: "rgba(154,69,62,0.22)", nebulaB: "rgba(173,109,55,0.24)", star: "#f1dab1", haze: "#653536", ink: "#261818", ember: "#c96a45" },
+        { space: "#02070f", floor: "#071420", floorLine: "#10273f", nebulaA: "rgba(52,117,122,0.18)", nebulaB: "rgba(75,82,127,0.30)", star: "#d1eceb", haze: "#2e3c64", ink: "#101c30", ember: "#b95452" }
+      ];
+
+      function drawNebulaLayer(time, bg) {
+        const drift = (state.cameraX * 0.045) % 180;
+        const nebula = ctx.createLinearGradient(-100 - drift, 104, W + 180 - drift, 390);
+        nebula.addColorStop(0, "rgba(11,35,64,0)");
+        nebula.addColorStop(0.28, bg.nebulaA);
+        nebula.addColorStop(0.58, bg.nebulaB);
+        nebula.addColorStop(1, "rgba(11,35,64,0)");
+        ctx.fillStyle = nebula;
+        steppedPoly([
+          [-60, 332], [118, 286], [324, 314], [510, 245], [722, 282],
+          [926, 216], [1124, 242], [1336, 306], [1220, 374], [1012, 344],
+          [800, 382], [610, 336], [392, 370], [164, 350]
+        ]);
+        ctx.fill();
+
+        ctx.save();
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = bg.haze;
+        for (let i = 0; i < 7; i += 1) {
+          const x = ((i * 245 - state.cameraX * 0.08 + time * 0.004) % (W + 260)) - 120;
+          pxRect(x, 230 + (i % 3) * 34, 170 + (i % 2) * 80, 12, bg.haze);
+        }
+        ctx.restore();
+      }
+
+      function drawSpaceBrushwork(time, bg) {
+        ctx.save();
+        ctx.globalAlpha = 0.34;
+        for (let i = 0; i < 24; i += 1) {
+          const x = ((i * 87 - state.cameraX * (0.04 + i % 5 * 0.01) + time * 0.002) % (W + 220)) - 120;
+          const y = 34 + i % 9 * 36 + Math.sin(time * 0.0008 + i) * 5;
+          const w = 58 + i % 6 * 24;
+          const h = 4 + i % 3 * 2;
+          ctx.fillStyle = i % 3 === 0 ? bg.haze : bg.ink;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(-0.34);
+          pxRect(0, 0, w, h, ctx.fillStyle);
+          pxRect(w * 0.24, h + 5, w * 0.46, 2, "rgba(196,221,213,0.09)");
+          ctx.restore();
+        }
+        ctx.globalAlpha = 0.18;
+        for (let i = 0; i < 9; i += 1) {
+          const x = ((i * 190 - state.cameraX * 0.07 + 1000) % (W + 280)) - 120;
+          const y = 86 + i % 4 * 62;
+          ctx.fillStyle = bg.ember;
+          steppedPoly([
+            [x, y + 24],
+            [x + 80, y],
+            [x + 210, y + 12],
+            [x + 138, y + 36],
+            [x + 32, y + 40]
+          ]);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function drawStarField(time, bg) {
+        for (const star of state.stars) {
+          const x = (star.x - state.cameraX * star.speed + W * 2) % W;
+          const glow = 0.45 + Math.sin(time * 0.002 + star.twinkle) * 0.35;
+          ctx.globalAlpha = 0.42 + glow * 0.52;
+          ctx.fillStyle = star.r > 1.7 ? bg.star : "#7fa8c4";
+          const size = star.r > 1.7 ? 3 : 2;
+          ctx.fillRect(Math.round(x), Math.round(star.y), size, size);
+          if (star.r > 2.2) {
+            ctx.fillRect(Math.round(x) - 3, Math.round(star.y) + 1, 9, 1);
+            ctx.fillRect(Math.round(x) + 1, Math.round(star.y) - 3, 1, 9);
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function drawLevelBackdrop(time) {
+        if (state.levelIndex === 1) {
+          drawCometAsteroidScene(time);
+        } else if (state.levelIndex === 2) {
+          drawMercurySunScene(time);
+        } else if (state.levelIndex === 3) {
+          drawJupiterMoonsScene(time);
+        } else {
+          drawShipSaturnScene(time);
+        }
+      }
+
+      function drawShipSaturnScene(time) {
+        drawPixelSaturn(1036 - state.cameraX * 0.13, 162, 96, time * 0.00025);
+        drawPixelCruiser(694 - state.cameraX * 0.22, 132 + Math.sin(time * 0.001) * 4, 1.05, levels[0].theme[0]);
+        drawPixelCruiser(888 - state.cameraX * 0.28, 102 + Math.sin(time * 0.0014 + 2) * 3, 0.48, "#c48658");
+      }
+
+      function drawPlanet(x, y, r, colorA, colorB, angle) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.fillStyle = "#07111f";
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 6, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = colorB;
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = colorA;
+        for (let yy = -r + 12; yy < r; yy += 18) {
+          const width = Math.sqrt(Math.max(0, r * r - yy * yy)) * 2;
+          ctx.fillRect(Math.round(-width / 2), yy, Math.round(width), 8);
+        }
+        ctx.fillStyle = "rgba(255,255,255,0.22)";
+        ctx.fillRect(-r * 0.45, -r * 0.52, r * 0.28, r * 0.14);
+        ctx.strokeStyle = "#2f5872";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * 1.48, r * 0.34, -0.2, 0, TAU);
+        ctx.stroke();
+        ctx.strokeStyle = "#07111f";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 2, 0, TAU);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawPixelSaturn(x, y, r, angle) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.save();
+        ctx.rotate(-0.20);
+        ctx.strokeStyle = "#07111f";
+        ctx.lineWidth = 18;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * 1.72, r * 0.42, 0, 0, TAU);
+        ctx.stroke();
+        ctx.strokeStyle = "#5ea9c6";
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * 1.62, r * 0.34, 0, 0, TAU);
+        ctx.stroke();
+        ctx.strokeStyle = "#f2c16f";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * 1.36, r * 0.26, 0, 0, TAU);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.fillStyle = "#07111f";
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 7, 0, TAU);
+        ctx.fill();
+        const bands = [
+          ["#e9b465", -0.92, -0.58],
+          ["#d66f78", -0.58, -0.32],
+          ["#efc379", -0.32, -0.02],
+          ["#c45d7a", -0.02, 0.28],
+          ["#e4a45d", 0.28, 0.58],
+          ["#bf536e", 0.58, 0.92]
+        ];
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, TAU);
+        ctx.clip();
+        bands.forEach(([color, from, to]) => {
+          ctx.fillStyle = color;
+          ctx.fillRect(-r, from * r, r * 2, (to - from) * r);
+        });
+        ctx.fillStyle = "rgba(255,255,255,0.20)";
+        pxRect(-r * 0.46, -r * 0.50, r * 0.26, r * 0.13, "rgba(255,255,255,0.20)");
+        ctx.fillStyle = "rgba(6,12,25,0.20)";
+        pxRect(r * 0.20, -r * 0.80, r * 0.38, r * 1.55, "rgba(6,12,25,0.20)");
+        ctx.restore();
+      }
+
+      function drawPixelCruiser(x, y, scale, accent) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+        ctx.fillStyle = "#07111f";
+        steppedPoly([[-82, 8], [-44, -22], [22, -26], [92, -8], [122, 8], [70, 30], [-36, 28]]);
+        ctx.fill();
+        ctx.fillStyle = "#273039";
+        steppedPoly([[-70, 6], [-36, -16], [22, -19], [84, -6], [104, 7], [62, 21], [-34, 20]]);
+        ctx.fill();
+        ctx.fillStyle = "#52656a";
+        steppedPoly([[-28, -13], [20, -15], [64, -5], [36, 4], [-40, 4]]);
+        ctx.fill();
+        pxRect(-64, 3, 20, 5, "#141a20");
+        pxRect(-40, -5, 20, 5, "#141a20");
+        pxRect(-14, -10, 26, 5, accent);
+        pxRect(18, -8, 18, 4, "#22282e");
+        pxRect(38, -2, 22, 5, "#4d9ba5");
+        pxRect(-50, 8, 28, 6, "#1c2838");
+        pxRect(66, 9, 20, 5, "#c4ddd5");
+        pxRect(82, 0, 15, 4, "#8b3f45");
+        for (let rib = -54; rib <= 54; rib += 18) {
+          pxRect(rib, -1 + Math.abs(rib) % 3, 4, 18 - Math.abs(rib) % 5, "#111820");
+          pxRect(rib + 5, 4, 7, 2, "rgba(196,221,213,0.18)");
+        }
+        pxRect(-76, 7, 20, 7, "#07111f");
+        pxRect(70, -5, 5, 5, "#b95452");
+        pxRect(82, -1, 5, 5, "#b95452");
+        pxRect(92, 5, 5, 5, "#b95452");
+        ctx.fillStyle = "#b95452";
+        ctx.fillRect(-92, 8, 24, 6);
+        ctx.fillStyle = "#c48658";
+        ctx.fillRect(-106, 10, 16, 3);
+        ctx.fillStyle = "rgba(77,155,165,0.18)";
+        ctx.fillRect(-20, 16, 72, 4);
+        ctx.fillStyle = "rgba(2,7,13,0.34)";
+        steppedPoly([[-70, 10], [-10, 13], [58, 8], [96, 10], [62, 21], [-34, 20]]);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawCometAsteroidScene(time) {
+        const beltY = 162;
+        for (let i = 0; i < 18; i += 1) {
+          const x = ((i * 96 - state.cameraX * 0.18 + 1600) % 1480) - 120;
+          const y = beltY + Math.sin(i * 1.7 + time * 0.001) * 58;
+          drawAsteroid(x, y, 0.42 + (i % 5) * 0.08, i);
+        }
+        const cometX = 1010 - state.cameraX * 0.21 + Math.sin(time * 0.0008) * 12;
+        const cometY = 110 + Math.sin(time * 0.0012) * 10;
+        ctx.save();
+        ctx.globalAlpha = 0.90;
+        for (let i = 0; i < 8; i += 1) {
+          ctx.fillStyle = i % 2 ? "rgba(97,229,143,0.14)" : "rgba(242,168,75,0.14)";
+          steppedPoly([
+            [cometX - 48 - i * 28, cometY + 12 + i * 4],
+            [cometX - 14 - i * 22, cometY - 4 + i * 2],
+            [cometX + 28, cometY + 6],
+            [cometX - 12 - i * 18, cometY + 24 + i * 2]
+          ]);
+          ctx.fill();
+        }
+        ctx.restore();
+        drawAsteroid(cometX + 28, cometY + 8, 1.0, 23, "#f2a84b");
+      }
+
+      function drawAsteroid(x, y, scale, seed, core = "#8a6d4c") {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+        ctx.rotate((seed % 7) * 0.08);
+        ctx.fillStyle = "#07111f";
+        steppedPoly([[-32, -18], [-12, -34], [22, -28], [38, -8], [28, 18], [2, 34], [-26, 24], [-42, 0]]);
+        ctx.fill();
+        ctx.fillStyle = core;
+        steppedPoly([[-26, -16], [-10, -28], [18, -22], [32, -7], [22, 15], [2, 27], [-20, 19], [-34, 0]]);
+        ctx.fill();
+        pxRect(-17, -17, 18, 8, "#b99468");
+        pxRect(8, -4, 12, 8, "#60485b");
+        pxRect(-5, 13, 17, 7, "#614a41");
+        ctx.restore();
+      }
+
+      function drawMercurySunScene(time) {
+        const sunX = 1048 - state.cameraX * 0.05;
+        const sunY = 210;
+        ctx.save();
+        ctx.globalAlpha = 0.28;
+        for (let r = 260; r >= 96; r -= 34) {
+          ctx.fillStyle = r % 68 === 0 ? "rgba(240,103,94,0.10)" : "rgba(242,168,75,0.12)";
+          ctx.beginPath();
+          ctx.arc(sunX, sunY, r, 0, TAU);
+          ctx.fill();
+        }
+        ctx.restore();
+        drawPixelSun(sunX, sunY, 126, time);
+        drawPixelMercury(sunX - 318, sunY - 72, 42, time);
+      }
+
+      function drawPixelSun(x, y, r, time) {
+        ctx.save();
+        ctx.translate(x, y);
+        for (let i = 0; i < 20; i += 1) {
+          const angle = i / 20 * TAU + Math.sin(time * 0.001) * 0.08;
+          ctx.fillStyle = i % 2 ? "#f0675e" : "#f2a84b";
+          steppedPoly([
+            [Math.cos(angle) * (r + 8), Math.sin(angle) * (r + 8)],
+            [Math.cos(angle + 0.055) * (r + 48), Math.sin(angle + 0.055) * (r + 48)],
+            [Math.cos(angle + 0.11) * (r + 8), Math.sin(angle + 0.11) * (r + 8)]
+          ]);
+          ctx.fill();
+        }
+        ctx.fillStyle = "#07111f";
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 8, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#f7c75d";
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#f0675e";
+        for (let yy = -r + 16; yy < r; yy += 24) {
+          const width = Math.sqrt(Math.max(0, r * r - yy * yy)) * 2;
+          pxRect(-width / 2, yy, width, 9, "rgba(240,103,94,0.42)");
+        }
+        ctx.restore();
+      }
+
+      function drawPixelMercury(x, y, r, time) {
+        ctx.save();
+        ctx.translate(x, y + Math.sin(time * 0.001) * 5);
+        ctx.fillStyle = "#07111f";
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 5, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#8e8275";
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, TAU);
+        ctx.fill();
+        pxRect(-23, -18, 22, 8, "#b2a28f");
+        pxRect(4, -6, 24, 9, "#5d5860");
+        pxRect(-12, 14, 20, 7, "#6b625e");
+        pxRect(-r, -r, r * 0.46, r * 2, "rgba(3,7,18,0.22)");
+        ctx.restore();
+      }
+
+      function drawJupiterMoonsScene(time) {
+        const baseX = 1015 - state.cameraX * 0.11;
+        drawMoon(baseX - 284, 92 + Math.sin(time * 0.001) * 6, 25, "#c9b995", "#7f6c55");
+        drawMoon(baseX - 112, 252 + Math.sin(time * 0.0012 + 1) * 7, 36, "#d9d1bd", "#817b72");
+        drawJupiterSlice(baseX + 88, 176, 132);
+        drawMoon(baseX + 154, 304 + Math.sin(time * 0.0011 + 4) * 6, 22, "#9bb7c9", "#567183");
+        drawMoon(baseX + 242, 90 + Math.sin(time * 0.0014 + 2) * 5, 28, "#b88c6a", "#765847");
+      }
+
+      function drawJupiterSlice(x, y, r) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = "#07111f";
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 8, 0, TAU);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, TAU);
+        ctx.clip();
+        const bands = ["#d6a15e", "#8f5a4d", "#f0c173", "#bc6a57", "#ead19b", "#7b4c58", "#d39b62"];
+        for (let i = 0; i < bands.length; i += 1) {
+          pxRect(-r, -r + i * 38, r * 2, 30, bands[i]);
+        }
+        pxRect(18, 38, 62, 23, "#a84653");
+        pxRect(30, 43, 36, 11, "#f2a84b");
+        ctx.restore();
+      }
+
+      function drawMoon(x, y, r, color, crater) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = "#07111f";
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 4, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, TAU);
+        ctx.fill();
+        pxRect(-r * 0.45, -r * 0.24, r * 0.34, r * 0.18, crater);
+        pxRect(r * 0.10, r * 0.12, r * 0.30, r * 0.16, crater);
+        pxRect(-r * 0.10, -r * 0.62, r * 0.24, r * 0.12, "rgba(255,255,255,0.24)");
+        ctx.restore();
+      }
+
+      function drawHangarSilhouette(time, accent) {
+        ctx.save();
+        ctx.globalAlpha = 0.42;
+        for (let x = -160; x < W + 220; x += 260) {
+          const px = x - (state.cameraX * 0.05) % 260;
+          pxRect(px, 455, 156, 70, "#07111f");
+          pxStrokeRect(px + 14, 468, 52, 38, "#203a52", 3);
+          pxRect(px + 22, 476, 38, 4, accent);
+          pxRect(px + 22, 488, 26, 3, "#4b7188");
+          pxStrokeRect(px + 82, 468, 62, 42, "#203a52", 3);
+          pxRect(px + 92, 478, 36, 5, "#8a6d4c");
+          pxRect(px + 92, 492, 44, 5, "#2d7590");
+        }
+        ctx.restore();
+      }
+
+      function drawWorld(time) {
+        ctx.save();
+        ctx.translate(-state.cameraX, 0);
+        drawDecorations(time);
+        drawPlatforms();
+        drawLasers(time);
+        drawCrate(time);
+        drawTerminal(time);
+        drawLevers(time);
+        drawGate(time);
+        drawLadder(time);
+        drawPortal(time);
+        if (state.boss) {
+          drawBoss(time);
+        }
+        drawParticles();
+        drawPlayer(time);
+        drawTerminalPrompt(time);
+        drawLeverPrompt(time);
+        ctx.restore();
+      }
+
+      function drawDecorations(time) {
+        const theme = levels[state.levelIndex].theme;
+        ctx.save();
+        ctx.globalAlpha = 0.30;
+        for (let x = -120; x < state.worldWidth; x += 360) {
+          pxRect(x, 512, 260, 118, "#06101d");
+          pxRect(x + 8, 520, 244, 102, "#0a1728");
+          pxStrokeRect(x + 20, 532, 86, 58, "#203a52", 3);
+          pxRect(x + 28, 540, 70, 42, "rgba(56,230,223,0.10)");
+          for (let line = 0; line < 5; line += 1) {
+            pxRect(x + 34, 548 + line * 7, 42 + (line % 2) * 18, 2, "#2d7590");
+          }
+          pxStrokeRect(x + 128, 534, 96, 68, "#203a52", 3);
+          pxRect(x + 138, 544, 76, 6, "#8a6d4c");
+          pxRect(x + 138, 558, 36, 6, "#7b3c68");
+          pxRect(x + 138, 572, 62, 6, "#2d7590");
+          pxRect(x + 138, 586, 24, 6, "#4b7188");
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalAlpha = 0.48;
+        drawCrystal(210, 535 + Math.sin(time * 0.004) * 3, "#83634b", 0.75);
+        drawCrystal(1328, 535 + Math.sin(time * 0.004 + 1) * 3, "#236979", 0.65);
+        drawRobotGuide(245, 514 + Math.sin(time * 0.003) * 3);
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalAlpha = 0.48;
+        for (let x = 90; x < state.worldWidth; x += 190) {
+          pxRect(x, 640, 112, 4, "rgba(56,230,223,0.22)");
+          pxRect(x + 28, 628, 84, 3, "rgba(242,168,75,0.20)");
+        }
+        ctx.restore();
+      }
+
+      function drawCrystal(x, y, color, scale) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(scale, scale);
+        pxRect(-8, -36, 16, 8, "#07111f");
+        pxRect(-18, -28, 36, 10, "#07111f");
+        pxRect(-28, -16, 56, 30, "#07111f");
+        pxRect(-16, 14, 32, 20, "#07111f");
+        pxRect(-6, -30, 12, 8, "#dffbff");
+        pxRect(-14, -22, 28, 10, color);
+        pxRect(-22, -12, 44, 24, color);
+        pxRect(-12, 12, 24, 16, "#2f5872");
+        pxRect(-5, -16, 10, 40, "rgba(255,255,255,0.32)");
+        ctx.restore();
+      }
+
+      function drawRobotGuide(x, y) {
+        ctx.save();
+        ctx.translate(x, y);
+        pxRect(-28, -38, 56, 58, "#07111f");
+        pxRect(-22, -32, 44, 46, "#7f9cb2");
+        pxRect(-14, -24, 8, 8, "#081322");
+        pxRect(6, -24, 8, 8, "#081322");
+        pxRect(-16, -6, 32, 5, "#38e6df");
+        pxRect(-28, 18, 12, 16, "#07111f");
+        pxRect(16, 18, 12, 16, "#07111f");
+        pxRect(-40, 30, 22, 5, "#7f9cb2");
+        pxRect(18, 30, 22, 5, "#7f9cb2");
+        pxRect(-8, -46, 16, 8, "#38e6df");
+        pxRect(-2, -56, 4, 10, "#7f9cb2");
+        ctx.restore();
+      }
+
+      function drawPlatforms() {
+        const level = levels[state.levelIndex];
+        const platforms = getPlatforms();
+        for (const rawPlatform of platforms) {
+          const p = resolvedPlatform(rawPlatform);
+          drawPlatform(p.x, p.y, p.w, p.h, level.theme[0], Boolean(rawPlatform.floatAmp));
+        }
+      }
+
+      function drawPlatform(x, y, w, h, color, floating = false) {
+        ctx.save();
+        if (floating) {
+          pxRect(x + w * 0.20, y + h + 5, w * 0.60, 4, "rgba(58,166,173,0.18)");
+          pxRect(x + w * 0.34, y + h + 10, w * 0.32, 3, "rgba(196,138,80,0.16)");
+        }
+        pxRect(x - 3, y - 3, w + 6, h + 6, "#020711");
+        pxRect(x, y, w, h, "#070c12");
+        pxRect(x + 4, y + 4, w - 8, h - 8, "#122532");
+        pxRect(x + 8, y + 7, w - 16, 5, "#6a8790");
+        pxRect(x + 8, y + 14, w - 16, 3, color);
+        pxRect(x + 12, y + 20, w - 24, 2, "rgba(204,221,213,0.12)");
+        if (floating) {
+          pxRect(x + 12, y + h - 15, 18, 4, "#c48658");
+          pxRect(x + w - 30, y + h - 15, 18, 4, "#c48658");
+          pxRect(x + 18, y + h - 9, 8, 3, "#4d9ba5");
+          pxRect(x + w - 26, y + h - 9, 8, 3, "#4d9ba5");
+        }
+        pxRect(x + 8, y + h - 11, w - 16, 3, "#284451");
+        for (let step = x + 18; step < x + w - 18; step += 34) {
+          pxRect(step, y + h - 9, 14, 5, "#081322");
+          pxRect(step + 4, y + h - 7, 6, 1, "rgba(196,221,213,0.14)");
+        }
+        if (w > 160) {
+          for (let rivet = x + 26; rivet < x + w - 20; rivet += 52) {
+            pxRect(rivet, y + 8, 4, 4, "#c4ddd5");
+            pxRect(rivet + 1, y + 9, 2, 2, "#07111f");
+          }
+        }
+        ctx.restore();
+      }
+
+      function drawLasers(time) {
+        const lasers = state.layout?.lasers || [];
+        lasers.forEach((laser) => {
+          if (laser.vertical) {
+            drawVerticalLaser(laser, time);
+            return;
+          }
+          const pulse = 0.70 + Math.sin(time * 0.014 + laser.phase) * 0.22;
+          const beamY = laser.y + Math.round(Math.sin(time * 0.007 + laser.phase) * 1.4);
+          const scan = ((time * 0.14 + laser.phase * 31) % (laser.w + 46)) - 23;
+          const spark = Math.sin(time * 0.024 + laser.phase) > 0.35;
+          ctx.save();
+          pxRect(laser.x - 8, laser.y - 12, 10, laser.h + 24, "#07111f");
+          pxRect(laser.x + laser.w - 2, laser.y - 12, 10, laser.h + 24, "#07111f");
+          pxRect(laser.x - 5, laser.y - 8, 5, laser.h + 16, "#8a6d4c");
+          pxRect(laser.x + laser.w, laser.y - 8, 5, laser.h + 16, "#8a6d4c");
+          pxRect(laser.x - 3, beamY - 8, laser.w + 6, laser.h + 16, `rgba(240,103,94,${0.18 + pulse * 0.08})`);
+          pxRect(laser.x, beamY - 2, laser.w, laser.h + 4, "#b62445");
+          pxRect(laser.x, beamY, laser.w, laser.h, "#f0675e");
+          pxRect(laser.x, beamY + 3, laser.w, Math.max(2, laser.h - 6), `rgba(255,217,135,${pulse})`);
+          for (let segment = laser.x + 10; segment < laser.x + laser.w - 8; segment += 22) {
+            const segmentPulse = 0.45 + Math.sin(time * 0.018 + segment * 0.08 + laser.phase) * 0.28;
+            pxRect(segment, beamY - 4, 10, laser.h + 8, `rgba(255,248,180,${segmentPulse})`);
+          }
+          pxRect(laser.x + scan, beamY - 7, 18, laser.h + 14, "rgba(216,251,255,0.34)");
+          pxRect(laser.x + scan + 5, beamY - 3, 8, laser.h + 6, "rgba(255,255,255,0.50)");
+          pxRect(laser.x + 8, laser.y - 18, 42, 8, "#07111f");
+          pxRect(laser.x + 12, laser.y - 16, 34, 4, "#f0675e");
+          if (spark) {
+            pxRect(laser.x - 18, beamY - 5, 8, 4, "#ffd987");
+            pxRect(laser.x + laser.w + 13, beamY + laser.h + 1, 8, 4, "#ffd987");
+            pxRect(laser.x - 25, beamY + laser.h + 6, 5, 3, "#d8fbff");
+            pxRect(laser.x + laser.w + 24, beamY - 8, 5, 3, "#d8fbff");
+          }
+          ctx.fillStyle = "#ffd987";
+          ctx.font = "900 12px Courier New, monospace";
+          ctx.textAlign = "center";
+          ctx.fillText("LASER", laser.x + laser.w / 2, laser.y - 10);
+          ctx.restore();
+        });
+      }
+
+      function drawVerticalLaser(laser, time) {
+        const pulse = 0.70 + Math.sin(time * 0.014 + laser.phase) * 0.22;
+        const beamX = laser.x + Math.round(Math.sin(time * 0.007 + laser.phase) * 1.4);
+        const scan = ((time * 0.13 + laser.phase * 27) % (laser.h + 46)) - 23;
+        const spark = Math.sin(time * 0.024 + laser.phase) > 0.35;
+        ctx.save();
+        pxRect(laser.x - 13, laser.y - 12, laser.w + 26, 10, "#07111f");
+        pxRect(laser.x - 8, laser.y - 8, laser.w + 16, 5, "#8a6d4c");
+        pxRect(laser.x - 13, laser.y + laser.h + 2, laser.w + 26, 10, "#07111f");
+        pxRect(laser.x - 8, laser.y + laser.h + 4, laser.w + 16, 5, "#8a6d4c");
+        pxRect(beamX - 8, laser.y - 4, laser.w + 16, laser.h + 8, `rgba(240,103,94,${0.18 + pulse * 0.08})`);
+        pxRect(beamX - 3, laser.y, laser.w + 6, laser.h, "#b62445");
+        pxRect(beamX, laser.y, laser.w, laser.h, "#f0675e");
+        pxRect(beamX + 4, laser.y, Math.max(3, laser.w - 8), laser.h, `rgba(255,217,135,${pulse})`);
+        for (let segment = laser.y + 10; segment < laser.y + laser.h - 8; segment += 22) {
+          const segmentPulse = 0.45 + Math.sin(time * 0.018 + segment * 0.08 + laser.phase) * 0.28;
+          pxRect(beamX - 5, segment, laser.w + 10, 10, `rgba(255,248,180,${segmentPulse})`);
+        }
+        pxRect(beamX - 7, laser.y + scan, laser.w + 14, 18, "rgba(216,251,255,0.34)");
+        pxRect(beamX - 3, laser.y + scan + 5, laser.w + 6, 8, "rgba(255,255,255,0.50)");
+        if (spark) {
+          pxRect(beamX - 20, laser.y - 20, 8, 4, "#ffd987");
+          pxRect(beamX + laser.w + 11, laser.y + laser.h + 15, 8, 4, "#ffd987");
+          pxRect(beamX - 27, laser.y + laser.h + 22, 5, 3, "#d8fbff");
+          pxRect(beamX + laser.w + 22, laser.y - 27, 5, 3, "#d8fbff");
+        }
+        ctx.fillStyle = "#ffd987";
+        ctx.font = "900 12px Courier New, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("LASER", laser.x + laser.w / 2, laser.y - 20);
+        ctx.restore();
+      }
+
+      function drawCrate(time) {
+        const crate = state.crate;
+        if (!crate) return;
+        const targetX = state.layout?.crateTargetX - 6 || 1914;
+        const targetY = state.layout?.crateTargetY || 650;
+        const near = Math.abs(player.x + player.w / 2 - (crate.x + crate.w / 2)) < 112 && Math.abs(player.y + player.h / 2 - (crate.y + crate.h / 2)) < 112;
+
+        ctx.save();
+        ctx.globalAlpha = 0.86;
+        pxStrokeRect(targetX, targetY - 94, 92, 94, "rgba(97,229,143,0.62)", 3);
+        pxRect(targetX + 6, targetY - 88, 80, 82, "rgba(97,229,143,0.12)");
+        ctx.fillStyle = "#bdf6c9";
+        ctx.font = "900 16px Courier New, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("TU USTAW", targetX + 46, targetY - 86);
+        ctx.globalAlpha = 1;
+        ctx.restore();
+
+        ctx.save();
+        pxRect(crate.x - 5, crate.y - 5, crate.w + 10, crate.h + 10, near || crate.glow > 0 ? "#61e58f" : "#020711");
+        pxRect(crate.x, crate.y, crate.w, crate.h, "#07111f");
+        pxRect(crate.x + 5, crate.y + 5, crate.w - 10, crate.h - 10, crate.glow > 0 || near ? "#d08b48" : "#9a6140");
+        pxRect(crate.x + 10, crate.y + 10, crate.w - 20, 10, "#f2a84b");
+        pxRect(crate.x + 10, crate.y + crate.h - 20, crate.w - 20, 8, "#4d3c55");
+        pxRect(crate.x + 14, crate.y + 25, 10, crate.h - 42, "#07111f");
+        pxRect(crate.x + crate.w - 24, crate.y + 25, 10, crate.h - 42, "#07111f");
+        pxRect(crate.x + 25, crate.y + 35, crate.w - 50, 8, "#07111f");
+        pxRect(crate.x + 25, crate.y + 52, crate.w - 50, 8, "#07111f");
+        pxRect(crate.x + 18, crate.y + 15, 14, 8, "rgba(255,255,255,0.35)");
+        pxRect(crate.x - 18, crate.y + 28, 16, 26, "#07111f");
+        pxRect(crate.x + crate.w + 2, crate.y + 28, 16, 26, "#07111f");
+        pxRect(crate.x - 13, crate.y + 34, 8, 14, "#f2a84b");
+        pxRect(crate.x + crate.w + 6, crate.y + 34, 8, 14, "#f2a84b");
+        pxRect(crate.x + 13, crate.y + crate.h - 7, 16, 7, "#07111f");
+        pxRect(crate.x + crate.w - 29, crate.y + crate.h - 7, 16, 7, "#07111f");
+
+        ctx.fillStyle = near ? "#e8fff0" : "#ffd987";
+        ctx.font = "900 15px Courier New, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("PCHAJ", crate.x + crate.w / 2, crate.y - 13);
+        const arrowOffset = Math.sin(time * 0.01) > 0 ? 0 : 4;
+        pxRect(crate.x - 38 - arrowOffset, crate.y + 18, 18, 6, "#61e58f");
+        pxRect(crate.x - 44 - arrowOffset, crate.y + 14, 8, 14, "#61e58f");
+        pxRect(crate.x + crate.w + 20 + arrowOffset, crate.y + 18, 18, 6, "#61e58f");
+        pxRect(crate.x + crate.w + 38 + arrowOffset, crate.y + 14, 8, 14, "#61e58f");
+        ctx.restore();
+      }
+
+      function drawTerminal(time) {
+        const terminal = state.terminal;
+        if (!terminal) return;
+        const active = state.activeTerminal;
+        const level = levels[state.levelIndex];
+        const pulse = active ? 0.5 + Math.sin(time * 0.008) * 0.18 : terminal.pulse;
+        const x = terminal.x;
+        const y = terminal.y;
+        ctx.save();
+        pxRect(x - 76, y - 18, 152, 22, "#07111f");
+        pxRect(x - 68, y - 13, 136, 13, "#20314a");
+        pxRect(x - 50, y - 112, 100, 96, "#07111f");
+        pxRect(x - 42, y - 104, 84, 68, active ? "#0d2e38" : "#0b1a30");
+        pxStrokeRect(x - 36, y - 98, 72, 54, active ? "#61e58f" : level.theme[0], 3);
+        pxRect(x - 28, y - 88, 56, 6, "#38e6df");
+        pxRect(x - 28, y - 74, 38, 4, "#8db4cc");
+        pxRect(x - 28, y - 64, 48, 4, "#8db4cc");
+        pxRect(x - 28, y - 54, 24, 4, "#f2a84b");
+        pxRect(x - 36, y - 30, 72, 18, "#14243d");
+        for (let i = 0; i < 4; i += 1) {
+          pxRect(x - 28 + i * 18, y - 25, 8, 7, i === 2 ? "#f2a84b" : "#38e6df");
+        }
+        pxRect(x - 58, y - 96, 14, 56, "#10203a");
+        pxRect(x + 44, y - 96, 14, 56, "#10203a");
+        pxRect(x - 55, y - 88, 8, 34, level.theme[1]);
+        pxRect(x + 47, y - 88, 8, 34, level.theme[2]);
+        pxRect(x - 70, y - 134, 140, 24, "#07111f");
+        pxRect(x - 64, y - 129, 128, 15, active ? "#17343b" : "#10203a");
+        ctx.fillStyle = active ? "#bdf6c9" : "#d8fbff";
+        ctx.font = "900 14px Courier New, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("KOMPUTER BRAMY", x, y - 117);
+
+        if (pulse > 0) {
+          ctx.globalAlpha = clamp(pulse, 0, 0.8);
+          pxStrokeRect(x - 88, y - 126, 176, 126, "#61e58f", 4);
+          ctx.globalAlpha = 1;
+        }
+        ctx.restore();
+      }
+
+      function drawLevers(time) {
+        const level = levels[state.levelIndex];
+        state.answerLevers.forEach((lever, index) => {
+          const active = state.activeLever === lever;
+          const shakeX = lever.shake > 0 ? Math.sin(performance.now() * 0.07) * 8 * lever.shake : 0;
+          const cx = lever.x + lever.w / 2;
+          const color = lever.correct && state.stageSolved ? "#a9ff68" : level.theme[(index + 1) % level.theme.length];
+          ctx.save();
+          ctx.translate(shakeX, 0);
+
+          pxRect(cx - 92, lever.y - 188, 184, 86, "#07111f");
+          pxRect(cx - 86, lever.y - 181, 172, 72, active ? "#17343b" : "#0b1a30");
+          pxRect(cx - 78, lever.y - 173, 156, 4, color);
+          pxRect(cx - 78, lever.y - 113, 156, 4, "#2f5872");
+          ctx.fillStyle = "#f8fbff";
+          ctx.font = "900 16px Courier New, monospace";
+          wrapText(ctx, lever.label, cx, lever.y - 142, 152, 18, 3);
+
+          pxRect(lever.x - 20, lever.y - 12, lever.w + 40, 22, "#07111f");
+          pxRect(lever.x - 14, lever.y - 8, lever.w + 28, 14, "#213451");
+          pxRect(lever.x, lever.y - 30, lever.w, 30, "#07111f");
+          pxRect(lever.x + 5, lever.y - 25, lever.w - 10, 20, color);
+          pxRect(lever.x + 10, lever.y - 21, lever.w - 20, 5, "rgba(255,255,255,0.36)");
+
+          const angle = lever.pulled ? 0.78 : active ? -0.72 + Math.sin(time * 0.009) * 0.05 : -0.62;
+          ctx.save();
+          ctx.translate(cx, lever.y - 28);
+          ctx.rotate(angle);
+          pxRect(-4, -45, 8, 45, "#d2e2e8");
+          pxRect(-10, -58, 20, 16, active ? "#61e58f" : "#f2a84b");
+          pxRect(-6, -54, 12, 5, "rgba(255,255,255,0.45)");
+          ctx.restore();
+
+          if (active) {
+            ctx.fillStyle = "#bdf6c9";
+            ctx.font = "900 15px Courier New, monospace";
+            ctx.textAlign = "center";
+            ctx.fillText("SPACJA", cx, lever.y - 202);
+          }
+          ctx.restore();
+        });
+      }
+
+      function drawLeverPrompt(time) {
+        if (!state.activeLever || state.stageSolved || player.dead) return;
+        const x = player.x + player.w / 2;
+        const y = player.y - 32 + Math.sin(time * 0.006) * 4;
+        ctx.save();
+        pxRect(x - 104, y - 31, 208, 38, "#07111f");
+        pxRect(x - 100, y - 27, 200, 30, "#10203a");
+        pxStrokeRect(x - 100, y - 27, 200, 30, "#61e58f", 2);
+        ctx.fillStyle = "#bdf6c9";
+        ctx.font = "900 16px Courier New, monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("Pociągnij: SPACJA", x, y - 13);
+        ctx.restore();
+      }
+
+      function drawTerminalPrompt(time) {
+        if (!state.activeTerminal || state.stageSolved || player.dead) return;
+        const x = player.x + player.w / 2;
+        const y = player.y - 32 + Math.sin(time * 0.006) * 4;
+        ctx.save();
+        pxRect(x - 122, y - 31, 244, 38, "#07111f");
+        pxRect(x - 118, y - 27, 236, 30, "#10203a");
+        pxStrokeRect(x - 118, y - 27, 236, 30, "#61e58f", 2);
+        ctx.fillStyle = "#bdf6c9";
+        ctx.font = "900 16px Courier New, monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("Podłącz komputer: SPACJA", x, y - 13);
+        ctx.restore();
+      }
+
+      function drawGate(time) {
+        const gate = gateRect();
+        const theme = levels[state.levelIndex].theme;
+        ctx.save();
+        ctx.translate(gate.x + gate.w / 2, gate.y + gate.h / 2);
+        const open = state.gateOpen ? 1 : 0;
+        const doorColor = state.gateOpen ? "#61e58f" : theme[2];
+        pxRect(-38 - open * 44, -160, 26, 320, "#07111f");
+        pxRect(12 + open * 44, -160, 26, 320, "#07111f");
+        pxRect(-31 - open * 44, -150, 12, 300, doorColor);
+        pxRect(19 + open * 44, -150, 12, 300, doorColor);
+        if (!state.gateOpen) {
+          for (let y = -126; y <= 126; y += 36) {
+            pxRect(-20, y, 40, 5, "#d2e2e8");
+          }
+          ctx.fillStyle = "#fff";
+          ctx.font = "900 18px Courier New, monospace";
+          ctx.textAlign = "center";
+          ctx.fillText("BRAMA", 0, -178);
+        } else {
+          ctx.fillStyle = "#bdf6c9";
+          ctx.font = "900 19px Courier New, monospace";
+          ctx.textAlign = "center";
+          ctx.fillText("OTWARTE", 0, -178);
+        }
+        ctx.restore();
+      }
+
+      function drawLadder(time) {
+        if (!state.gateOpen) return;
+        const ladder = ladderRect();
+        const active = rectsOverlap(playerHitbox(), ladder);
+        ctx.save();
+        pxRect(ladder.x + 18, ladder.y, 10, ladder.h, "#07111f");
+        pxRect(ladder.x + ladder.w - 28, ladder.y, 10, ladder.h, "#07111f");
+        pxRect(ladder.x + 21, ladder.y + 4, 4, ladder.h - 8, active ? "#61e58f" : "#d2e2e8");
+        pxRect(ladder.x + ladder.w - 25, ladder.y + 4, 4, ladder.h - 8, active ? "#61e58f" : "#d2e2e8");
+        for (let y = ladder.y + 28; y < ladder.y + ladder.h - 12; y += 32) {
+          pxRect(ladder.x + 20, y, ladder.w - 40, 6, "#07111f");
+          pxRect(ladder.x + 26, y + 1, ladder.w - 52, 3, active ? "#bdf6c9" : "#8db4cc");
+        }
+        ctx.fillStyle = active ? "#bdf6c9" : "#d8fbff";
+        ctx.font = "900 14px Courier New, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("DRABINA", ladder.x + ladder.w / 2, ladder.y - 12 + Math.sin(time * 0.005) * 2);
+        if (active) {
+          ctx.fillText("W / ↑", ladder.x + ladder.w / 2, ladder.y + ladder.h + 22);
+        }
+        ctx.restore();
+      }
+
+      function drawPortal(time) {
+        const portal = portalRect();
+        const cx = portal.x + portal.w / 2;
+        const cy = portal.y + portal.h / 2 - 4;
+        const active = state.gateOpen;
+        const theme = levels[state.levelIndex].theme;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.globalAlpha = active ? 1 : 0.42;
+        for (let i = 0; i < 4; i += 1) {
+          ctx.save();
+          ctx.rotate(time * 0.0012 + i * 0.35);
+          pxStrokeRect(-44 - i * 5, -74 + i * 4, 88 + i * 10, 148 - i * 8, i % 2 === 0 ? theme[0] : theme[1], 4);
+          ctx.restore();
+        }
+        pxRect(-32, -58, 64, 116, active ? "rgba(97,229,143,0.18)" : "rgba(255,255,255,0.08)");
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#fff";
+        ctx.font = "900 18px Courier New, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(active ? "PORTAL" : "ZAMKNIĘTY", 0, -104);
+        ctx.restore();
+      }
+
+      function drawBoss(time) {
+        const x = 2848;
+        const y = 290 + Math.sin(time * 0.002) * 10;
+        const hits = state.boss?.hits || 0;
+        ctx.save();
+        ctx.translate(x, y);
+        pxRect(-78, -78, 156, 156, "#07111f");
+        pxRect(-68, -68, 136, 136, "rgba(242,168,75,0.18)");
+        pxStrokeRect(-58, -58, 116, 116, "#d2e2e8", 5);
+        drawClockFaceOnly(0, 0, 48, true);
+        ctx.fillStyle = "#fff";
+        ctx.font = "900 18px Courier New, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("Zawirowanie Czasu", 0, 105);
+        ctx.fillStyle = "#f2a84b";
+        ctx.fillText(`${hits}/3`, 0, 132);
+        ctx.restore();
+      }
+
+      function drawParticles() {
+        for (const p of state.particles) {
+          const alpha = clamp(p.life / p.maxLife, 0, 1);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, TAU);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      function drawPlayer(time) {
+        ctx.save();
+        ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
+        ctx.scale(player.facing, 1);
+        if (player.dead) {
+          ctx.globalAlpha = 0.55 + Math.sin(time * 0.05) * 0.22;
+        }
+
+        const running = Math.abs(player.vx) > 35 && player.onGround;
+        const airborne = !player.onGround;
+        const bob = running ? Math.round(Math.sin(time * 0.013) * 2) : airborne ? -2 : 0;
+        const legSwing = running ? Math.round(Math.sin(time * 0.015) * 7) : airborne ? Math.round(Math.sin(time * 0.015) * 2) : 0;
+        const armSwing = running ? Math.round(Math.sin(time * 0.012) * 5) : airborne ? Math.round(Math.sin(time * 0.012)) : 0;
+
+        ctx.translate(0, bob - 25);
+
+        const suitDark = "#09111d";
+        const suitMid = "#172737";
+        const suitLight = "#304557";
+        const metal = "#c9d4d5";
+        const metalShadow = "#7b8f98";
+        const orange = "#c06a2c";
+        const orangeLight = "#e18b3b";
+        const cyan = "#38e6df";
+        const cyanDim = "#1d8d9c";
+        const skin = "#f0aa78";
+        const skinLight = "#ffc08a";
+        const skinShade = "#c77854";
+        const hair = "#4a251b";
+        const hairLight = "#8f4d25";
+        const outline = "#020711";
+
+        pxRect(-27 + legSwing, 56, 27, 9, "rgba(0,0,0,0.30)");
+        pxRect(2 - legSwing, 56, 27, 9, "rgba(0,0,0,0.30)");
+
+        pxRect(-21 + legSwing, 34, 15, 26, outline);
+        pxRect(-17 + legSwing, 36, 10, 20, suitMid);
+        pxRect(-15 + legSwing, 38, 5, 15, "#263849");
+        pxRect(-20 + legSwing, 47, 5, 12, orange);
+        pxRect(-27 + legSwing, 57, 26, 9, outline);
+        pxRect(-23 + legSwing, 54, 22, 8, metalShadow);
+        pxRect(-22 + legSwing, 55, 18, 4, "#d7d4cb");
+        pxRect(-25 + legSwing, 62, 28, 7, outline);
+        pxRect(-21 + legSwing, 62, 22, 4, "#a35e30");
+
+        pxRect(6 - legSwing, 34, 15, 26, outline);
+        pxRect(8 - legSwing, 36, 10, 20, suitMid);
+        pxRect(10 - legSwing, 38, 5, 15, "#263849");
+        pxRect(17 - legSwing, 47, 5, 12, orange);
+        pxRect(1 - legSwing, 57, 26, 9, outline);
+        pxRect(4 - legSwing, 54, 22, 8, metalShadow);
+        pxRect(7 - legSwing, 55, 18, 4, "#d7d4cb");
+        pxRect(0 - legSwing, 62, 28, 7, outline);
+        pxRect(4 - legSwing, 62, 22, 4, "#a35e30");
+
+        pxRect(-25, -12, 50, 56, outline);
+        pxRect(-21, -8, 42, 49, suitDark);
+        pxRect(-17, -5, 34, 42, suitMid);
+        pxRect(-10, -7, 20, 9, metalShadow);
+        pxRect(-6, -5, 12, 5, "#d7d4cb");
+        pxRect(-18, -10, 7, 47, orange);
+        pxRect(11, -10, 7, 47, orange);
+        pxRect(-14, -6, 5, 40, "#f3f0df");
+        pxRect(9, -6, 5, 40, "#f3f0df");
+        pxRect(-16, 4, 32, 30, outline);
+        pxRect(-12, 7, 24, 23, "#1b2b3a");
+        pxRect(-8, 10, 16, 7, cyanDim);
+        pxRect(-6, 11, 12, 4, cyan);
+        pxRect(-9, 22, 5, 5, "#40b4bd");
+        pxRect(-1, 22, 4, 5, "#d7bc76");
+        pxRect(6, 22, 4, 5, "#ff6c2f");
+        pxRect(-19, 32, 38, 7, "#2f3f4e");
+        pxRect(-2, 34, 4, 11, "#b9c6c8");
+        pxRect(-9, 36, 18, 4, outline);
+        pxRect(-5, 36, 10, 2, metal);
+        pxRect(-20, 0, 5, 10, "#405365");
+        pxRect(15, 0, 5, 10, "#405365");
+        pxRect(-23, -1, 6, 5, orangeLight);
+        pxRect(17, -1, 6, 5, orangeLight);
+        pxRect(-13, -8, 4, 44, "rgba(255,255,255,0.13)");
+        pxRect(10, -8, 3, 44, "rgba(255,255,255,0.10)");
+
+        pxRect(-36, -1 + armSwing, 16, 37, outline);
+        pxRect(-32, 2 + armSwing, 10, 28, suitMid);
+        pxRect(-34, 1 + armSwing, 7, 14, orange);
+        pxRect(-31, 18 + armSwing, 11, 5, "#405365");
+        pxRect(-39, 31 + armSwing, 20, 12, outline);
+        pxRect(-35, 31 + armSwing, 14, 8, "#363232");
+        pxRect(-32, 33 + armSwing, 8, 3, metalShadow);
+
+        pxRect(20, -1 - armSwing, 16, 37, outline);
+        pxRect(22, 2 - armSwing, 10, 28, suitMid);
+        pxRect(27, 1 - armSwing, 7, 14, orange);
+        pxRect(22, 18 - armSwing, 11, 5, "#405365");
+        pxRect(19, 10 - armSwing, 12, 6, "#15323f");
+        pxRect(23, 11 - armSwing, 8, 3, cyan);
+        pxRect(19, 31 - armSwing, 20, 12, outline);
+        pxRect(21, 31 - armSwing, 14, 8, "#363232");
+        pxRect(24, 33 - armSwing, 8, 3, metalShadow);
+
+        pxRect(-31, -23, 62, 17, outline);
+        pxRect(-25, -20, 50, 10, "#161f2c");
+        pxRect(-20, -18, 40, 6, "#d4c9b7");
+        pxRect(-18, -17, 36, 3, "#7f8b90");
+        pxRect(-27, -17, 7, 9, orange);
+        pxRect(20, -17, 7, 9, orange);
+
+        pxRect(-21, -47, 42, 35, outline);
+        pxRect(-17, -42, 34, 28, skin);
+        pxRect(-12, -43, 29, 8, skinLight);
+        pxRect(11, -39, 6, 24, skinShade);
+        pxRect(-17, -35, 5, 19, "#d88b63");
+        pxRect(-13, -46, 28, 7, hair);
+        pxRect(-19, -43, 22, 9, hair);
+        pxRect(-16, -50, 26, 7, hair);
+        pxRect(-8, -53, 22, 5, hair);
+        pxRect(-1, -50, 18, 4, hairLight);
+        pxRect(-18, -38, 7, 8, hair);
+        pxRect(-12, -41, 18, 4, hairLight);
+        pxRect(4, -45, 12, 4, "#a45a2c");
+        pxRect(-11, -34, 8, 3, hair);
+        pxRect(5, -34, 8, 3, hair);
+        pxRect(-9, -30, 4, 4, outline);
+        pxRect(8, -30, 4, 4, outline);
+        pxRect(-2, -30, 4, 9, "#d58964");
+        pxRect(-7, -22, 17, 4, "#8d5137");
+        pxRect(-4, -21, 10, 2, "#b46a4b");
+        pxRect(-14, -40, 3, 8, "rgba(255,255,255,0.24)");
+        pxRect(10, -41, 4, 14, "rgba(90,36,28,0.26)");
+
+        pxRect(-27, -36, 9, 22, outline);
+        pxRect(-24, -33, 6, 16, metal);
+        pxRect(-22, -29, 3, 9, cyan);
+        pxRect(18, -36, 9, 22, outline);
+        pxRect(18, -33, 6, 16, metal);
+        pxRect(19, -29, 3, 9, cyan);
+        pxRect(24, -24, 10, 5, outline);
+        pxRect(29, -21, 9, 4, metalShadow);
+        pxRect(35, -18, 8, 4, outline);
+        pxRect(29, -17, 9, 3, metal);
+        pxRect(21, -45, 7, 3, orangeLight);
+
+        if (player.dead) {
+          pxStrokeRect(-38, -56, 76, 116, "rgba(240,103,94,0.74)", 4);
+          pxRect(-48, -8, 10, 6, "#f0675e");
+          pxRect(38, -2, 10, 6, "#f0675e");
+        }
+        ctx.restore();
+      }
+
+      function drawQuestionPanel(time) {
+        if (!state.currentQuestion) return;
+        const qn = state.currentQuestion;
+        const level = levels[state.levelIndex];
+        const x = 22;
+        const y = 18;
+        const w = 342;
+        const h = 316;
+        ctx.save();
+        pxRect(x, y, w, h, "#07111f");
+        pxRect(x + 5, y + 5, w - 10, h - 10, "rgba(7,14,22,0.94)");
+        pxStrokeRect(x + 12, y + 12, w - 24, h - 24, "#284451", 2);
+        pxRect(x + 18, y + 54, w - 36, 3, "rgba(77,155,165,0.30)");
+        pxStrokeRect(x + 28, y + 68, 286, 220, "rgba(77,155,165,0.16)", 3);
+        pxRect(x + 34, y + 74, 274, 208, "rgba(196,221,213,0.025)");
+
+        ctx.fillStyle = level.theme[1];
+        ctx.font = "900 17px Courier New, monospace";
+        ctx.textAlign = "left";
+        ctx.fillText(state.answerMode === "terminal" ? "Komputer bramy czeka" : "Otwórz kosmiczną bramę", x + 24, y + 36);
+
+        const minuteLabels = qn.minuteLabels || [];
+        const detailed = state.levelIndex >= 3 || minuteLabels.length > 0;
+        const highlightMinute = state.hintShown && !state.stageSolved;
+        drawClock(x + 171, y + 182, 116, qn.hour, qn.minute, detailed, highlightMinute, time, minuteLabels);
+        ctx.restore();
+      }
+
+      function drawClock(cx, cy, r, hour, minute, detailed, highlightMinute, time, minuteLabels = []) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.shadowColor = "rgba(56,230,223,0.55)";
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = "#07111f";
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 12, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#edf7fa";
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, TAU);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "#d8fbff";
+        ctx.lineWidth = 5;
+        ctx.stroke();
+        ctx.strokeStyle = "#07111f";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(0, 0, r - 8, 0, TAU);
+        ctx.stroke();
+
+        drawClockFaceOnly(0, 0, r, detailed, false, minuteLabels);
+
+        const minuteAngle = minute / 60 * TAU - Math.PI / 2;
+        const hourAngle = ((hour % 12) + minute / 60) / 12 * TAU - Math.PI / 2;
+
+        if (highlightMinute) {
+          ctx.strokeStyle = "rgba(56,230,223,0.30)";
+          ctx.lineWidth = 18 + Math.sin(time * 0.008) * 3;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(minuteAngle) * r * 0.82, Math.sin(minuteAngle) * r * 0.82);
+          ctx.stroke();
+        }
+
+        ctx.strokeStyle = "#c07a45";
+        ctx.lineWidth = Math.max(8, r * 0.074);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(hourAngle + Math.PI) * r * 0.08, Math.sin(hourAngle + Math.PI) * r * 0.08);
+        ctx.lineTo(Math.cos(hourAngle) * r * 0.40, Math.sin(hourAngle) * r * 0.40);
+        ctx.stroke();
+        ctx.fillStyle = "#f2a84b";
+        ctx.beginPath();
+        ctx.arc(Math.cos(hourAngle) * r * 0.40, Math.sin(hourAngle) * r * 0.40, Math.max(3, r * 0.028), 0, TAU);
+        ctx.fill();
+
+        ctx.strokeStyle = "#38e6df";
+        ctx.lineWidth = Math.max(4, r * 0.040);
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(minuteAngle + Math.PI) * r * 0.10, Math.sin(minuteAngle + Math.PI) * r * 0.10);
+        ctx.lineTo(Math.cos(minuteAngle) * r * 0.84, Math.sin(minuteAngle) * r * 0.84);
+        ctx.stroke();
+        ctx.fillStyle = "#b9ffff";
+        ctx.beginPath();
+        ctx.arc(Math.cos(minuteAngle) * r * 0.84, Math.sin(minuteAngle) * r * 0.84, Math.max(2.5, r * 0.020), 0, TAU);
+        ctx.fill();
+
+        ctx.fillStyle = "#07111f";
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(7, r * 0.07), 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#dffbff";
+        ctx.beginPath();
+        ctx.arc(-r * 0.02, -r * 0.02, Math.max(3, r * 0.028), 0, TAU);
+        ctx.fill();
+
+        drawClockNumbers(0, 0, r, true);
+        if (minuteLabels.length) {
+          drawMinuteLabels(0, 0, r, minuteLabels);
+        }
+        ctx.restore();
+      }
+
+      function drawClockFaceOnly(cx, cy, r, detailed, showNumbers = true, minuteLabels = []) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        for (let i = 0; i < 60; i += 1) {
+          const angle = i / 60 * TAU - Math.PI / 2;
+          const major = i % 5 === 0;
+          const quarter = i % 15 === 0;
+          const len = quarter ? r * 0.18 : major ? r * 0.14 : detailed ? r * 0.075 : r * 0.045;
+          ctx.strokeStyle = quarter ? "#020711" : major ? "#07111f" : detailed ? "rgba(7,17,31,0.62)" : "rgba(7,17,31,0.28)";
+          ctx.lineWidth = quarter ? Math.max(4, r * 0.034) : major ? Math.max(3, r * 0.027) : Math.max(1.1, r * 0.012);
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(angle) * (r - len - 5), Math.sin(angle) * (r - len - 5));
+          ctx.lineTo(Math.cos(angle) * (r - 9), Math.sin(angle) * (r - 9));
+          ctx.stroke();
+        }
+
+        if (minuteLabels.length) {
+          drawMinuteLabels(0, 0, r, minuteLabels);
+        }
+
+        if (showNumbers) {
+          drawClockNumbers(0, 0, r);
+        }
+        ctx.restore();
+      }
+
+      function drawMinuteLabels(cx, cy, r, labels) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.font = `900 ${Math.max(13, r * 0.11)}px Courier New, monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        labels.forEach((minuteValue) => {
+          const angle = minuteValue / 60 * TAU - Math.PI / 2;
+          const tx = Math.cos(angle) * r * 0.88;
+          const ty = Math.sin(angle) * r * 0.88;
+          const label = String(minuteValue);
+          const padW = label.length > 1 ? r * 0.22 : r * 0.16;
+          pxRect(tx - padW / 2, ty - r * 0.066, padW, r * 0.132, "rgba(7,17,31,0.90)");
+          ctx.fillStyle = "#b9ffff";
+          ctx.fillText(label, tx, ty + 1);
+        });
+        ctx.restore();
+      }
+
+      function drawClockNumbers(cx, cy, r, withPads = false) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.fillStyle = "#07111f";
+        ctx.font = `900 ${Math.max(15, r * 0.22)}px Courier New, monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        for (let n = 1; n <= 12; n += 1) {
+          const angle = n / 12 * TAU - Math.PI / 2;
+          const tx = Math.cos(angle) * r * 0.67;
+          const ty = Math.sin(angle) * r * 0.67 + 1;
+          if (withPads) {
+            const padW = n >= 10 ? r * 0.25 : r * 0.18;
+            const padH = r * 0.19;
+            pxRect(tx - padW / 2, ty - padH / 2, padW, padH, "rgba(210,226,232,0.92)");
+          }
+          ctx.fillStyle = "#07111f";
+          ctx.fillText(String(n), tx, ty);
+        }
+        ctx.restore();
+      }
+
+      function wrapText(context, text, x, y, maxWidth, lineHeight, maxLines = 3, align = "center") {
+        const words = String(text).split(" ");
+        let line = "";
+        const lines = [];
+        for (let i = 0; i < words.length; i += 1) {
+          const testLine = line ? `${line} ${words[i]}` : words[i];
+          if (context.measureText(testLine).width > maxWidth && line) {
+            lines.push(line);
+            line = words[i];
+          } else {
+            line = testLine;
+          }
+        }
+        if (line) lines.push(line);
+        const visible = lines.slice(0, maxLines);
+        if (lines.length > maxLines) {
+          visible[maxLines - 1] = `${visible[maxLines - 1].replace(/\s+\S*$/, "")}…`;
+        }
+
+        context.textAlign = align;
+        context.textBaseline = "middle";
+        const startY = y - (visible.length - 1) * lineHeight / 2;
+        visible.forEach((lineText, index) => {
+          context.fillText(lineText, x, startY + index * lineHeight);
+        });
+      }
+
+      function pxRect(x, y, w, h, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+      }
+
+      function pxStrokeRect(x, y, w, h, color, width = 3) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.strokeRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+      }
+
+      function steppedPoly(points) {
+        ctx.beginPath();
+        points.forEach(([x, y], index) => {
+          if (index === 0) {
+            ctx.moveTo(Math.round(x), Math.round(y));
+          } else {
+            ctx.lineTo(Math.round(x), Math.round(y));
+          }
+        });
+        ctx.closePath();
+      }
+
+      function roundRect(context, x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.lineTo(x + w - radius, y);
+        context.quadraticCurveTo(x + w, y, x + w, y + radius);
+        context.lineTo(x + w, y + h - radius);
+        context.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+        context.lineTo(x + radius, y + h);
+        context.quadraticCurveTo(x, y + h, x, y + h - radius);
+        context.lineTo(x, y + radius);
+        context.quadraticCurveTo(x, y, x + radius, y);
+        context.closePath();
+      }
+
+      function nextStage() {
+        const level = levels[state.levelIndex];
+        if (state.stageIndex < levelStageCount(level) - 1) {
+          state.stageIndex += 1;
+          screen.classList.add("hidden");
+          touchControls.classList.add("playing");
+          setupStage();
+          setMusicTrack("heroic");
+        } else {
+          nextLevel();
+        }
+      }
+
+      function nextLevel() {
+        if (state.levelIndex < levels.length - 1) {
+          state.levelIndex += 1;
+          state.stageIndex = 0;
+          screen.classList.add("hidden");
+          touchControls.classList.add("playing");
+          setupStage();
+          setMusicTrack("heroic");
+        } else {
+          showStartScreen();
+        }
+      }
+
+      function handleAction(target) {
+        const action = target.dataset.action;
+        if (!action) return;
+
+        if (action === "adventure") {
+          showTutorial({ mode: "adventure", levelIndex: 0, stageIndex: 0 });
+        } else if (action === "levels") {
+          showLevelScreen();
+        } else if (action === "level") {
+          const levelIndex = Number(target.dataset.level) || 0;
+          showTutorial({ mode: "level", levelIndex, stageIndex: 0 });
+        } else if (action === "tutorialStart") {
+          beginGame(state.pendingStart || { mode: "adventure", levelIndex: 0, stageIndex: 0 });
+        } else if (action === "nextStage") {
+          nextStage();
+        } else if (action === "nextLevel") {
+          nextLevel();
+        } else if (action === "toggleMusic") {
+          toggleMusic();
+        } else if (action === "back") {
+          showStartScreen();
+        }
+      }
+
+      function handleKeyDown(event) {
+        if (state.terminalOpen) {
+          if (event.code === "Escape") {
+            event.preventDefault();
+            closeTerminal();
+          }
+          return;
+        }
+        if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space", "KeyA", "KeyD", "KeyW", "KeyS"].includes(event.code)) {
+          event.preventDefault();
+        }
+        if (event.code === "ArrowLeft" || event.code === "KeyA") keys.left = true;
+        if (event.code === "ArrowRight" || event.code === "KeyD") keys.right = true;
+        if (event.code === "ArrowDown" || event.code === "KeyS") keys.down = true;
+        if (event.code === "ArrowUp" || event.code === "KeyW") {
+          if (!keys.jump) jumpQueued = true;
+          keys.jump = true;
+        }
+        if (event.code === "Space") {
+          if (!keys.action) actionQueued = true;
+          keys.action = true;
+        }
+        if (event.code === "Escape") {
+          showStartScreen();
+        }
+      }
+
+      function handleKeyUp(event) {
+        if (event.code === "ArrowLeft" || event.code === "KeyA") keys.left = false;
+        if (event.code === "ArrowRight" || event.code === "KeyD") keys.right = false;
+        if (event.code === "ArrowDown" || event.code === "KeyS") keys.down = false;
+        if (event.code === "ArrowUp" || event.code === "KeyW") keys.jump = false;
+        if (event.code === "Space") keys.action = false;
+      }
+
+      function bindTouchControls() {
+        touchControls.querySelectorAll("[data-touch]").forEach((button) => {
+          const control = button.dataset.touch;
+          const set = (value) => {
+            if (control === "left") keys.left = value;
+            if (control === "right") keys.right = value;
+            if (control === "jump") {
+              if (value && !keys.jump) jumpQueued = true;
+              keys.jump = value;
+            }
+            if (control === "action") {
+              if (value && !keys.action) actionQueued = true;
+              keys.action = value;
+            }
+          };
+          button.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            initAudio();
+            button.setPointerCapture(event.pointerId);
+            set(true);
+          });
+          button.addEventListener("pointerup", () => set(false));
+          button.addEventListener("pointercancel", () => set(false));
+          button.addEventListener("lostpointercapture", () => set(false));
+        });
+      }
+
+      function gameLoop(timestamp) {
+        const dt = Math.min(0.033, (timestamp - lastTime) / 1000 || 0);
+        lastTime = timestamp;
+        update(dt);
+        draw(timestamp);
+        requestAnimationFrame(gameLoop);
+      }
+
+      screen.addEventListener("click", (event) => {
+        const target = event.target.closest("[data-action]");
+        if (target) {
+          initAudio();
+          handleAction(target);
+        }
+      });
+
+      document.getElementById("menuButton").addEventListener("click", () => {
+        showStartScreen();
+      });
+
+      musicButton.addEventListener("click", () => {
+        initAudio();
+        toggleMusic();
+      });
+
+      terminalForm.addEventListener("submit", submitTerminalAnswer);
+      terminalClose.addEventListener("click", () => closeTerminal());
+
+      window.addEventListener("keydown", handleKeyDown, { passive: false });
+      window.addEventListener("keyup", handleKeyUp);
+      window.addEventListener("blur", () => {
+        keys.left = false;
+        keys.right = false;
+        keys.jump = false;
+        keys.action = false;
+        keys.down = false;
+      });
+
+      loadMusicPreference();
+      startStars();
+      bindTouchControls();
+      showStartScreen();
+      requestAnimationFrame(gameLoop);
+    })();
+  </script>
+</body>
+</html>
