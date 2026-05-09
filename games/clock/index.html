@@ -190,6 +190,28 @@
       filter: drop-shadow(0 0 8px rgba(56, 230, 223, 0.65));
     }
 
+    .hero-art.scene-card {
+      min-height: 340px;
+      aspect-ratio: 702 / 514;
+      background: #03080e;
+      border-color: #203747;
+    }
+
+    .hero-art.scene-card::before,
+    .hero-art.scene-card::after {
+      content: none;
+    }
+
+    .hero-scene {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      image-rendering: pixelated;
+    }
+
     .tiny-ship,
     .tiny-robot,
     .tiny-sword,
@@ -1609,39 +1631,8 @@
                   <button class="btn secondary" type="button" data-action="toggleMusic">${musicLabel()}</button>
                 </div>
               </div>
-              <div class="hero-art" aria-hidden="true">
-                <div class="tiny-astronaut">
-                  <span class="pack"></span>
-                  <span class="torso"></span>
-                  <span class="chest"></span>
-                  <span class="belt"></span>
-                  <span class="strap-a"></span>
-                  <span class="strap-b"></span>
-                  <span class="shoulder-a"></span>
-                  <span class="shoulder-b"></span>
-                  <span class="neck"></span>
-                  <span class="head"></span>
-                  <span class="hair"></span>
-                  <span class="eye-a"></span>
-                  <span class="eye-b"></span>
-                  <span class="mouth"></span>
-                  <span class="ear-a"></span>
-                  <span class="ear-b"></span>
-                  <span class="mic"></span>
-                  <span class="helmet"></span>
-                  <span class="visor"></span>
-                  <span class="arm-a"></span>
-                  <span class="arm-b"></span>
-                  <span class="glove-a"></span>
-                  <span class="glove-b"></span>
-                  <span class="leg-a"></span>
-                  <span class="leg-b"></span>
-                  <span class="boot-a"></span>
-                  <span class="boot-b"></span>
-                </div>
-                <div class="tiny-ship"></div>
-                <div class="tiny-robot"></div>
-                <div class="tiny-sword"></div>
+              <div class="hero-art scene-card" aria-hidden="true">
+                <img class="hero-scene" src="assets/title-pilot-scene.png" alt="">
               </div>
             </div>
           </div>
